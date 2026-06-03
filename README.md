@@ -12,21 +12,38 @@ A single order can contain items from multiple vendors. The system splits each o
 
 ---
 
+## Screenshots
+
+### Storefront (customer home page)
+
+The public marketplace home: hero, category browser, featured products from multiple vendors, "how it works", and footer.
+
+![MVE storefront home page](docs/screenshots/home.png)
+
+### Admin dashboard
+
+The back-office (AdminLTE) dashboard: KPI tiles, the 14-day orders & revenue chart, and quick links to the moderation queues.
+
+![MVE admin dashboard](docs/screenshots/admin-dashboard.png)
+
+---
+
 ## Table of contents
 
-1. [Quick start](#quick-start)
-2. [Default credentials](#default-credentials-auto-seeded)
-3. [Architecture](#architecture)
-4. [Domain model](#domain-model)
-5. [How an order works](#how-an-order-works)
-6. [Use cases](#use-cases)
+1. [Screenshots](#screenshots)
+2. [Quick start](#quick-start)
+3. [Default credentials](#default-credentials-auto-seeded)
+4. [Architecture](#architecture)
+5. [Domain model](#domain-model)
+6. [How an order works](#how-an-order-works)
+7. [Use cases](#use-cases)
    - [Customer use cases](#customer-use-cases)
    - [Vendor use cases](#vendor-use-cases)
    - [Admin use cases](#admin-use-cases)
-7. [Tech stack](#tech-stack)
-8. [Project layout](#project-layout)
-9. [Configuration](#configuration)
-10. [Running the tests](#running-the-tests)
+8. [Tech stack](#tech-stack)
+9. [Project layout](#project-layout)
+10. [Configuration](#configuration)
+11. [Running the tests](#running-the-tests)
 
 ---
 
