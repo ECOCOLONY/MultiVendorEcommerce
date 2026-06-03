@@ -1,0 +1,65 @@
+@model Web.Models.ViewModels.Admin.StripeSettingsFormViewModel
+@{
+    ViewData["Title"] = "Stripe payments";
+}
+
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success alert-dismissible fade show">@ok<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="alert alert-info small">
+    Keys are stored in the database. Values in <code>appsettings.json</code> are used only as a fallback when the database secret is empty.
+</div>
+
+<form asp-action="Index" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>API keys</strong></div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label asp-for="NewSecretKey" class="form-label">Secret key</label>
+                <input asp-for="NewSecretKey" type="password" class="form-control" autocomplete="off" placeholder="@(Model.HasSecretKey ? "Leave blank to keep existing secret" : "sk_test_… or sk_live_…")" />
+                <div class="form-text">
+                    @if (Model.HasSecretKey)
+                    { <span>A secret key is already stored. Enter a new value only to rotate it.</span> }
+                    else
+                    { <span>No secret key in the database yet. Paste your Stripe secret key.</span> }
+                </div>
+                <span asp-validation-for="NewSecretKey" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="PublishableKey" class="form-label">Publishable key</label>
+                <input asp-for="PublishableKey" class="form-control" placeholder="pk_test_…" autocomplete="off" />
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Checkout defaults</strong></div>
+        <div class="card-body row g-3">
+            <div class="col-md-4">
+                <label asp-for="Currency" class="form-label">Default currency (ISO)</label>
+                <input asp-for="Currency" class="form-control" placeholder="usd, eur, try…" />
+                <span asp-validation-for="Currency" class="text-danger small"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Webhooks (optional)</strong></div>
+        <div class="card-body">
+            <label asp-for="WebhookSecret" class="form-label">Webhook signing secret</label>
+            <input asp-for="WebhookSecret" type="password" class="form-control" autocomplete="off" placeholder="whsec_…" />
+            <div class="form-text">For future webhook endpoints; checkout completion still uses the return URL.</div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Save Stripe settings</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

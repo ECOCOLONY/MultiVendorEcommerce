@@ -1,0 +1,55 @@
+@model Web.Models.ViewModels.Addresses.AddressFormViewModel
+
+<input type="hidden" asp-for="Id" />
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3"></div>
+
+<div class="row g-3">
+    <div class="col-12">
+        <label asp-for="Label" class="form-label">Address label</label>
+        <input asp-for="Label" class="form-control" placeholder="e.g. Home, Office, Parents…" />
+        <span asp-validation-for="Label" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Line1" class="form-label">Street address</label>
+        <input asp-for="Line1" class="form-control" placeholder="123 Main St" />
+        <span asp-validation-for="Line1" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Line2" class="form-label">Apartment / Suite <span class="text-muted fw-normal">(optional)</span></label>
+        <input asp-for="Line2" class="form-control" placeholder="Apt 4B" />
+        <span asp-validation-for="Line2" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="City" class="form-label">City</label>
+        <input asp-for="City" class="form-control" />
+        <span asp-validation-for="City" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="State" class="form-label">State / Province <span class="text-muted fw-normal">(optional)</span></label>
+        <input asp-for="State" class="form-control" />
+        <span asp-validation-for="State" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="PostalCode" class="form-label">Postal code</label>
+        <input asp-for="PostalCode" class="form-control" />
+        <span asp-validation-for="PostalCode" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Country" class="form-label">Country</label>
+        <input asp-for="Country" class="form-control" />
+        <span asp-validation-for="Country" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Phone" class="form-label">Phone <span class="text-muted fw-normal">(optional)</span></label>
+        <input asp-for="Phone" class="form-control" placeholder="+1 555 000 0000" />
+        <span asp-validation-for="Phone" class="text-danger" style="font-size:.8rem;"></span>
+    </div>
+    <div class="col-12">
+        <div class="form-check d-flex align-items-center gap-2 p-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;cursor:pointer;">
+            <input asp-for="IsDefault" class="form-check-input" style="width:1.2em;height:1.2em;" />
+            <label asp-for="IsDefault" class="form-check-label fw-semibold mb-0" style="cursor:pointer;color:#0f172a;">
+                Set as my default address
+            </label>
+        </div>
+    </div>
+</div>

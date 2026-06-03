@@ -1,0 +1,407 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using Infrastructure.Identity
+@using MediatR
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IStringLocalizer<Web.SharedResource> L
+@inject ISender Mediator
+@{
+    Application.Settings.PublicWebsiteSettingsDto site;
+    try
+    {
+        site = await Mediator.Send(new Application.Settings.Queries.GetPublicWebsiteSettings.GetPublicWebsiteSettingsQuery());
+    }
+    catch
+    {
+        site = new Application.Settings.PublicWebsiteSettingsDto();
+    }
+
+    var siteName = string.IsNullOrWhiteSpace(site.SiteName) ? "MVE" : site.SiteName;
+    var pageTitle = ViewData["Title"] as string;
+    var htmlTitle = ViewData["FullTitle"] as string;
+    if (string.IsNullOrEmpty(htmlTitle))
+        htmlTitle = string.IsNullOrEmpty(pageTitle) ? siteName : $"{pageTitle} Â· {siteName}";
+    var metaDesc = ViewData["MetaDescription"] as string ?? site.DefaultMetaDescription;
+    var metaKeywords = ViewData["MetaKeywords"] as string ?? site.DefaultMetaKeywords;
+    var ogTitle = ViewData["OgTitle"] as string ?? site.DefaultOgTitle ?? htmlTitle;
+    var ogImage = ViewData["OgImage"] as string ?? site.OgDefaultImageUrl;
+    var ogSite = site.OgSiteName ?? siteName;
+    var robots = string.IsNullOrWhiteSpace(site.RobotsMeta) ? "index, follow" : site.RobotsMeta!;
+    var baseForAbsolute = site.PublicBaseUrl?.Trim().TrimEnd('/');
+    var requestRoot = $"{Context.Request.Scheme}://{Context.Request.Host.Value}";
+    var absoluteRoot = string.IsNullOrEmpty(baseForAbsolute) ? requestRoot : baseForAbsolute!;
+    var canonicalUrl = $"{absoluteRoot}{Context.Request.Path}{Context.Request.QueryString}";
+    var twitterSite = site.TwitterSite?.Trim();
+    int cartCount = 0;
+    int unreadCount = 0;
+    if (SignInManager.IsSignedIn(User))
+    {
+        try
+        {
+            cartCount = await Mediator.Send(new Application.Cart.Queries.GetMyCartCount.GetMyCartCountQuery());
+            unreadCount = await Mediator.Send(new Application.Notifications.GetMyUnreadCountQuery());
+        } catch { /* layout-level lookups are best-effort */ }
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+    <title>@htmlTitle</title>
+    @if (!string.IsNullOrWhiteSpace(metaDesc))
+    {
+        <meta name="description" content="@metaDesc" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaKeywords))
+    {
+        <meta name="keywords" content="@metaKeywords" />
+    }
+    <meta name="robots" content="@robots" />
+    @if (!string.IsNullOrWhiteSpace(site.ThemeColor))
+    {
+        <meta name="theme-color" content="@site.ThemeColor" />
+    }
+    @if (!string.IsNullOrWhiteSpace(site.GoogleSiteVerification))
+    {
+        <meta name="google-site-verification" content="@site.GoogleSiteVerification" />
+    }
+    @if (!string.IsNullOrWhiteSpace(site.BingSiteVerification))
+    {
+        <meta name="msvalidate.01" content="@site.BingSiteVerification" />
+    }
+    <link rel="canonical" href="@canonicalUrl" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@ogTitle" />
+    @if (!string.IsNullOrWhiteSpace(metaDesc))
+    {
+        <meta property="og:description" content="@metaDesc" />
+    }
+    <meta property="og:url" content="@canonicalUrl" />
+    <meta property="og:site_name" content="@ogSite" />
+    @if (!string.IsNullOrWhiteSpace(ogImage))
+    {
+        <meta property="og:image" content="@(ogImage!.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? ogImage : absoluteRoot + ogImage)" />
+    }
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@ogTitle" />
+    @if (!string.IsNullOrWhiteSpace(metaDesc))
+    {
+        <meta name="twitter:description" content="@metaDesc" />
+    }
+    @if (!string.IsNullOrWhiteSpace(ogImage))
+    {
+        <meta name="twitter:image" content="@(ogImage!.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? ogImage : absoluteRoot + ogImage)" />
+    }
+    @if (!string.IsNullOrWhiteSpace(twitterSite))
+    {
+        <meta name="twitter:site" content="@twitterSite" />
+    }
+    @if (!string.IsNullOrWhiteSpace(site.FaviconUrl))
+    {
+        <link rel="icon" href="@site.FaviconUrl" />
+    }
+    @if (!string.IsNullOrWhiteSpace(site.StructuredDataJsonLd))
+    {
+        <script type="application/ld+json">@Html.Raw(site.StructuredDataJsonLd)</script>
+    }
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- scroll progress bar -->
+    <div id="mv-scroll-progress" style="position:fixed;top:0;left:0;height:2px;width:0;background:var(--mv-grad-1);z-index:9999;transition:width .05s linear" aria-hidden="true"></div>
+
+    <!-- Top utility bar -->
+    <div class="mv-topbar">
+        <div class="container-fluid px-3 px-md-4 px-xl-5 d-flex justify-content-between align-items-center">
+            <div class="d-none d-md-flex gap-3 small align-items-center">
+                <span><i class="bi bi-truck me-1"></i>@(site.TopBarPromo1 ?? "Free shipping over $50")</span>
+                <span class="opacity-40">Â·</span>
+                <span><i class="bi bi-shield-check me-1"></i>@(site.TopBarPromo2 ?? "Secure payments")</span>
+                <span class="opacity-40">Â·</span>
+                <span><i class="bi bi-arrow-counterclockwise me-1"></i>@(site.TopBarPromo3 ?? "Easy returns")</span>
+            </div>
+            <div class="d-flex gap-3 small ms-auto align-items-center">
+                <a asp-controller="Home" asp-action="Contact" class="mv-topbar-link d-none d-md-inline">
+                    <i class="bi bi-headset me-1"></i>Support
+                </a>
+                <div class="dropdown">
+                    <a class="mv-topbar-link dropdown-toggle d-flex align-items-center gap-1" data-bs-toggle="dropdown" href="#">
+                        <i class="bi bi-translate"></i>
+                        <span>@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToUpper()</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" style="z-index:9999!important;min-width:130px;">
+                        <li><a class="dropdown-item" asp-controller="Culture" asp-action="Set" asp-route-culture="en" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="bi bi-globe me-2"></i>English</a></li>
+                        <li><a class="dropdown-item" asp-controller="Culture" asp-action="Set" asp-route-culture="tr" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"><i class="bi bi-globe me-2"></i>TÃ¼rkÃ§e</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main navbar -->
+    <nav class="navbar navbar-expand-lg mv-navbar sticky-top" id="mainNavbar">
+        <div class="container-fluid px-3 px-md-4 px-xl-5">
+            <a class="navbar-brand mv-navbar__brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                @if (!string.IsNullOrWhiteSpace(site.HeaderLogoUrl))
+                {
+                    <img src="@site.HeaderLogoUrl" alt="@siteName" style="max-height:38px;width:auto;" />
+                }
+                else
+                {
+                    <span class="mv-navbar__logo-icon"><i class="bi bi-shop-window"></i></span>
+                }
+                <span class="mv-navbar__logo-text">@siteName</span>
+            </a>
+
+            <div class="d-flex align-items-center gap-1 d-lg-none ms-auto me-2">
+                <a class="mv-icon-btn position-relative" asp-controller="Cart" asp-action="Index">
+                    <i class="bi bi-cart3"></i>
+                    @if (cartCount > 0)
+                    { <span class="mv-badge-dot">@(cartCount > 99 ? "99+" : cartCount.ToString())</span> }
+                </a>
+            </div>
+
+            <button class="navbar-toggler border-0 p-1" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-3">
+                    <li class="nav-item"><a class="nav-link mv-navbar__link" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link mv-navbar__link" asp-controller="Products" asp-action="Index">Products</a></li>
+                    <li class="nav-item"><a class="nav-link mv-navbar__link" asp-controller="Stores" asp-action="List">Stores</a></li>
+                    <li class="nav-item"><a class="nav-link mv-navbar__link" asp-controller="Home" asp-action="About">About</a></li>
+                </ul>
+
+                <form class="d-flex flex-grow-1 me-3 mv-search" asp-controller="Products" asp-action="Index" method="get">
+                    <div class="input-group mv-search__group">
+                        <span class="input-group-text mv-search__icon"><i class="bi bi-search"></i></span>
+                        <input class="form-control mv-search__input" type="search" name="search" placeholder="Search products, storesâ€¦" autocomplete="off" />
+                        <button class="btn mv-search__btn" type="submit">Search</button>
+                    </div>
+                </form>
+
+                <ul class="navbar-nav align-items-center gap-1">
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <li class="nav-item">
+                            <a class="mv-icon-btn" asp-controller="Wishlist" asp-action="Index" title="Wishlist">
+                                <i class="bi bi-heart"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="mv-icon-btn position-relative" asp-controller="Notifications" asp-action="Index" title="Notifications">
+                                <i class="bi bi-bell"></i>
+                                @if (unreadCount > 0)
+                                { <span class="mv-badge-dot">@(unreadCount > 9 ? "9+" : unreadCount.ToString())</span> }
+                            </a>
+                        </li>
+                    }
+                    <li class="nav-item">
+                        <a class="mv-icon-btn position-relative d-none d-lg-inline-flex" asp-controller="Cart" asp-action="Index" title="Cart">
+                            <i class="bi bi-cart3"></i>
+                            @if (cartCount > 0)
+                            { <span class="mv-badge-dot">@(cartCount > 99 ? "99+" : cartCount.ToString())</span> }
+                        </a>
+                    </li>
+
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <li class="nav-item dropdown ms-1">
+                            <a class="mv-navbar__user dropdown-toggle" data-bs-toggle="dropdown" href="#">
+                                <div class="mv-navbar__avatar"><i class="bi bi-person-fill"></i></div>
+                                <span class="d-none d-xl-inline small fw-semibold">@User.Identity!.Name</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end mv-navbar__dropdown" style="z-index:9999!important;min-width:210px;">
+                                @if (User.IsInRole("Admin"))
+                                { <li><a class="dropdown-item" asp-area="Admin" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2 me-2 text-primary"></i>Admin Panel</a></li> }
+                                @if (User.IsInRole("Vendor"))
+                                { <li><a class="dropdown-item" asp-area="Vendor" asp-controller="Home" asp-action="Index"><i class="bi bi-shop-window me-2 text-primary"></i>Vendor Panel</a></li> }
+                                @if (User.IsInRole("Admin") || User.IsInRole("Vendor"))
+                                { <li><hr class="dropdown-divider my-1" /></li> }
+                                <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index"><i class="bi bi-person me-2"></i>@L["Nav.Profile"]</a></li>
+                                <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index"><i class="bi bi-bag me-2"></i>@L["Nav.MyOrders"]</a></li>
+                                <li><a class="dropdown-item" asp-controller="Addresses" asp-action="Index"><i class="bi bi-geo-alt me-2"></i>Addresses</a></li>
+                                <li><a class="dropdown-item" asp-controller="Wishlist" asp-action="Index"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
+                                <li><hr class="dropdown-divider my-1" /></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
+                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>@L["Nav.Logout"]</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item ms-1">
+                            <a class="mv-navbar__login" asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-right me-1"></i>@L["Nav.Login"]</a>
+                        </li>
+                        <li class="nav-item ms-1">
+                            <a class="mv-navbar__register" asp-controller="Account" asp-action="Register"><i class="bi bi-person-plus me-1"></i>@L["Nav.Register"]</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Scroll-activated navbar JS -->
+    <script>
+        (function(){
+            var nb = document.getElementById('mainNavbar');
+            if(!nb) return;
+            window.addEventListener('scroll', function(){
+                nb.classList.toggle('mv-navbar--scrolled', window.scrollY > 12);
+            }, {passive:true});
+        })();
+    </script>
+
+    <main class="mv-storefront-main py-4 flex-grow-1">
+        @if (TempData["Success"] is string okMsg)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-3">@okMsg<button class="btn-close" data-bs-dismiss="alert"></button></div>
+        }
+        @if (TempData["Error"] is string errMsg)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-3">@errMsg<button class="btn-close" data-bs-dismiss="alert"></button></div>
+        }
+        @if (TempData["Info"] is string infoMsg)
+        {
+            <div class="alert alert-info alert-dismissible fade show mb-3">@infoMsg<button class="btn-close" data-bs-dismiss="alert"></button></div>
+        }
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="mv-footer mt-auto">
+        <div class="container-fluid px-3 px-md-4 px-xl-5 py-5">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <a class="d-inline-block mb-2 fw-bold fs-4 text-decoration-none" asp-controller="Home" asp-action="Index" style="background: var(--mv-grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        @if (!string.IsNullOrWhiteSpace(site.FooterLogoUrl))
+                        {
+                            <img src="@site.FooterLogoUrl" alt="@siteName" style="max-height:40px;-webkit-text-fill-color:initial;" class="d-inline-block me-2 align-middle" />
+                        }
+                        else
+                        {
+                            <i class="bi bi-shop me-1" style="-webkit-text-fill-color: #6366f1;"></i>
+                        }
+                        @siteName
+                    </a>
+                    <p class="text-muted small">@(site.FooterTagline ?? "A trusted marketplace where independent vendors meet curious customers â€” one cart, one checkout, many stores.")</p>
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        @if (!string.IsNullOrWhiteSpace(site.SocialFacebookUrl))
+                        { <a href="@site.SocialFacebookUrl" class="mv-social" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a> }
+                        @if (!string.IsNullOrWhiteSpace(site.SocialTwitterUrl))
+                        { <a href="@site.SocialTwitterUrl" class="mv-social" target="_blank" rel="noopener noreferrer" aria-label="X"><i class="bi bi-twitter-x"></i></a> }
+                        @if (!string.IsNullOrWhiteSpace(site.SocialInstagramUrl))
+                        { <a href="@site.SocialInstagramUrl" class="mv-social" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a> }
+                        @if (!string.IsNullOrWhiteSpace(site.SocialYoutubeUrl))
+                        { <a href="@site.SocialYoutubeUrl" class="mv-social" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="bi bi-youtube"></i></a> }
+                        @if (!string.IsNullOrWhiteSpace(site.SocialLinkedInUrl))
+                        { <a href="@site.SocialLinkedInUrl" class="mv-social" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a> }
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-6">
+                    <h6 class="mv-footer-h">Shop</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><a asp-controller="Products" asp-action="Index" class="mv-footer-link">All products</a></li>
+                        <li class="mb-1"><a asp-controller="Stores" asp-action="List" class="mv-footer-link">All stores</a></li>
+                        <li class="mb-1"><a asp-controller="Home" asp-action="Index" class="mv-footer-link">Featured</a></li>
+                        <li class="mb-1"><a asp-controller="Wishlist" asp-action="Index" class="mv-footer-link">My wishlist</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-2 col-6">
+                    <h6 class="mv-footer-h">Help</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><a asp-controller="Home" asp-action="Faq" class="mv-footer-link">FAQ</a></li>
+                        <li class="mb-1"><a asp-controller="Home" asp-action="Contact" class="mv-footer-link">Contact us</a></li>
+                        <li class="mb-1"><a asp-controller="Orders" asp-action="Index" class="mv-footer-link">My orders</a></li>
+                        <li class="mb-1"><a asp-controller="Addresses" asp-action="Index" class="mv-footer-link">Addresses</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-2 col-6">
+                    <h6 class="mv-footer-h">Vendor</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><a asp-controller="Account" asp-action="RegisterVendor" class="mv-footer-link">Become a vendor</a></li>
+                        <li class="mb-1"><a asp-controller="Account" asp-action="Login" class="mv-footer-link">Vendor login</a></li>
+                        <li class="mb-1"><a asp-controller="Home" asp-action="About" class="mv-footer-link">About us</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-2 col-6">
+                    <h6 class="mv-footer-h">Legal</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><a asp-controller="Home" asp-action="Privacy" class="mv-footer-link">Privacy</a></li>
+                        <li class="mb-1"><a asp-controller="Home" asp-action="Terms" class="mv-footer-link">Terms</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="mv-footer-bar">
+            <div class="container-fluid px-3 px-md-4 px-xl-5 py-3 d-flex flex-wrap justify-content-between align-items-center">
+                <small class="text-muted">&copy; @DateTime.UtcNow.Year @siteName@(string.IsNullOrWhiteSpace(site.FooterCopyrightSuffix) ? "" : " Â· " + site.FooterCopyrightSuffix)</small>
+                <div class="d-flex gap-2 small">
+                    <span class="mv-pay"><i class="bi bi-credit-card-2-front"></i> Visa</span>
+                    <span class="mv-pay"><i class="bi bi-credit-card-2-front"></i> MasterCard</span>
+                    <span class="mv-pay"><i class="bi bi-bank"></i> Bank Transfer</span>
+                    <span class="mv-pay"><i class="bi bi-cash-coin"></i> COD</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="liveToasts" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1080"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // scroll progress bar
+        (function(){
+            var bar = document.getElementById('mv-scroll-progress');
+            if (!bar) return;
+            window.addEventListener('scroll', function(){
+                var s = document.documentElement;
+                var pct = (s.scrollTop / (s.scrollHeight - s.clientHeight)) * 100;
+                bar.style.width = Math.min(pct, 100) + '%';
+            }, { passive: true });
+        })();
+    </script>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+        <script>
+            (function () {
+                const c = new signalR.HubConnectionBuilder().withUrl('/hubs/notifications').withAutomaticReconnect().build();
+                c.on('notify', (msg) => {
+                    const t = document.createElement('div');
+                    t.className = 'toast align-items-center text-bg-primary border-0';
+                    t.setAttribute('role','alert');
+                    t.innerHTML =
+                        '<div class="d-flex">' +
+                        '  <div class="toast-body">' +
+                        '    <strong>' + (msg.title||'Notification') + '</strong><br/>' +
+                        '    <span class="small">' + (msg.body||'') + '</span>' +
+                        (msg.actionUrl ? '<div><a class="link-light small" href="'+msg.actionUrl+'">Open â†’</a></div>' : '') +
+                        '  </div>' +
+                        '  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+                        '</div>';
+                    document.getElementById('liveToasts').appendChild(t);
+                    new bootstrap.Toast(t, { delay: 6000 }).show();
+                });
+                c.start().catch(e => console.warn('SignalR connect failed', e));
+            })();
+        </script>
+    }
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

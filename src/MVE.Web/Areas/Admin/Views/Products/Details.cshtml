@@ -1,0 +1,95 @@
+@using Domain.Enums
+@model Application.Products.Queries.GetProductForAdmin.AdminProductDetailDto
+@{
+    ViewData["Title"] = $"Review — {Model.Name}";
+}
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">@Model.Name</h5></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Vendor</dt>      <dd class="col-sm-8">@Model.VendorBusiness</dd>
+                    <dt class="col-sm-4">Store</dt>       <dd class="col-sm-8">@Model.StoreName</dd>
+                    <dt class="col-sm-4">Category</dt>    <dd class="col-sm-8">@Model.CategoryName</dd>
+                    <dt class="col-sm-4">Slug</dt>        <dd class="col-sm-8"><code>@Model.Slug</code></dd>
+                    <dt class="col-sm-4">Base price</dt>  <dd class="col-sm-8">@Model.BasePrice.ToString("0.00")</dd>
+                    <dt class="col-sm-4">Description</dt> <dd class="col-sm-8">@(Model.Description ?? "—")</dd>
+                    <dt class="col-sm-4">Submitted</dt>   <dd class="col-sm-8">@Model.CreatedAtUtc.ToString("u")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-3">
+            <div class="card-header"><h5 class="mb-0">Variants</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light"><tr><th>SKU</th><th>Color</th><th>Size</th><th class="text-end">Price</th><th class="text-end">Stock</th></tr></thead>
+                    <tbody>
+                    @foreach (var v in Model.Variants)
+                    {
+                        <tr>
+                            <td><code>@v.Sku</code></td>
+                            <td>@(v.Color ?? "—")</td>
+                            <td>@(v.Size ?? "—")</td>
+                            <td class="text-end">@v.Price.ToString("0.00")</td>
+                            <td class="text-end">@v.StockQuantity</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (Model.Images.Any())
+        {
+            <div class="card shadow-sm mt-3">
+                <div class="card-header"><h5 class="mb-0">Images</h5></div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        @foreach (var img in Model.Images)
+                        {
+                            <div class="col-md-4">
+                                <img src="@img.Url" class="img-thumbnail w-100" style="height:140px;object-fit:cover" />
+                                @if (img.IsMain) { <span class="badge bg-primary mt-1">Main</span> }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Approval status</h5></div>
+            <div class="card-body">
+                <p>
+                    Current:
+                    @switch (Model.ApprovalStatus)
+                    {
+                        case ProductApprovalStatus.Approved: <span class="badge bg-success">Approved</span> break;
+                        case ProductApprovalStatus.Pending:  <span class="badge bg-warning text-dark">Pending</span> break;
+                        case ProductApprovalStatus.Rejected: <span class="badge bg-danger">Rejected</span> break;
+                    }
+                </p>
+                <div class="d-grid gap-2">
+                    <form asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                        <button class="btn btn-success w-100" @(Model.ApprovalStatus == ProductApprovalStatus.Approved ? "disabled" : "")>
+                            <i class="bi bi-check-circle me-1"></i>Approve & publish
+                        </button>
+                    </form>
+                    <form asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                        <button class="btn btn-outline-danger w-100" @(Model.ApprovalStatus == ProductApprovalStatus.Rejected ? "disabled" : "")>
+                            <i class="bi bi-x-circle me-1"></i>Reject
+                        </button>
+                    </form>
+                </div>
+                <div class="mt-3">
+                    <a asp-action="Index" class="btn btn-secondary w-100"><i class="bi bi-arrow-left me-1"></i>Back to list</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

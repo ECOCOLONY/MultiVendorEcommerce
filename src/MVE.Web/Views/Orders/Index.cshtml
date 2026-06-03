@@ -1,0 +1,128 @@
+@using Domain.Enums
+@model Application.Common.Models.PaginatedList<Application.Orders.Queries.GetMyOrders.MyOrderListItemDto>
+@{
+    ViewData["Title"] = "My Orders";
+
+    string StatusCss(OrderStatus s) => s switch
+    {
+        OrderStatus.Paid           => "paid",
+        OrderStatus.Processing     => "processing",
+        OrderStatus.Shipped        => "shipped",
+        OrderStatus.Delivered      => "delivered",
+        OrderStatus.Cancelled      => "cancelled",
+        OrderStatus.Refunded       => "refunded",
+        OrderStatus.PendingPayment => "pending",
+        _                          => "pending"
+    };
+    string StatusLabel(OrderStatus s) => s switch
+    {
+        OrderStatus.Paid           => "Paid",
+        OrderStatus.Processing     => "Processing",
+        OrderStatus.Shipped        => "Shipped",
+        OrderStatus.Delivered      => "Delivered",
+        OrderStatus.Cancelled      => "Cancelled",
+        OrderStatus.Refunded       => "Refunded",
+        OrderStatus.PendingPayment => "Pending payment",
+        _                          => s.ToString()
+    };
+    string StatusIcon(OrderStatus s) => s switch
+    {
+        OrderStatus.Paid           => "bi-credit-card",
+        OrderStatus.Processing     => "bi-tools",
+        OrderStatus.Shipped        => "bi-truck",
+        OrderStatus.Delivered      => "bi-check2-circle",
+        OrderStatus.Cancelled      => "bi-x-circle",
+        OrderStatus.Refunded       => "bi-arrow-counterclockwise",
+        OrderStatus.PendingPayment => "bi-hourglass-split",
+        _                          => "bi-circle"
+    };
+}
+
+<div class="mv-page-header">
+    <div>
+        <h1 class="mv-page-header__title"><i class="bi bi-bag"></i>My Orders</h1>
+        <p class="mv-page-header__sub">@Model.TotalCount order@(Model.TotalCount == 1 ? "" : "s") · newest first</p>
+    </div>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="mv-empty-state">
+        <div class="mv-empty-state__icon"><i class="bi bi-bag-x"></i></div>
+        <h4>No orders yet</h4>
+        <p>Once you place your first order it'll appear here.</p>
+        <a asp-controller="Products" asp-action="Index" class="btn btn-primary">
+            <i class="bi bi-grid-3x3-gap me-1"></i>Start shopping
+        </a>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-2">
+        @foreach (var o in Model.Items)
+        {
+            <div class="mv-order-row">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <div style="width:48px;height:48px;border-radius:.75rem;background:var(--mv-grad-soft);
+                                    display:flex;align-items:center;justify-content:center;color:#6366f1;font-size:1.25rem;">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="mv-order-row__number">@o.OrderNumber</div>
+                        <div class="small text-muted mt-1">
+                            <i class="bi bi-clock me-1"></i>@o.PlacedAtUtc.ToString("MMM d, yyyy · HH:mm")
+                        </div>
+                    </div>
+                    <div class="col-auto text-center d-none d-md-block">
+                        <div class="small text-muted mb-1">Items</div>
+                        <strong>@o.ItemCount</strong>
+                    </div>
+                    <div class="col-auto text-center d-none d-md-block">
+                        <div class="small text-muted mb-1">Total</div>
+                        <strong style="background:var(--mv-grad-1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+                            $@o.Total.ToString("0.00")
+                        </strong>
+                    </div>
+                    <div class="col-auto">
+                        <span class="mv-order-status @StatusCss(o.Status)">
+                            <i class="bi @StatusIcon(o.Status)"></i>
+                            @StatusLabel(o.Status)
+                        </span>
+                    </div>
+                    <div class="col-auto">
+                        <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye me-1"></i>View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-4" aria-label="Orders pagination">
+            <ul class="pagination justify-content-center gap-1 flex-wrap">
+                <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
+                    <a class="page-link" asp-route-page="@(Model.PageNumber - 1)" style="border-radius:.5rem;">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link" asp-route-page="@i" style="border-radius:.5rem;min-width:2.25rem;text-align:center;">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.HasNext ? "" : "disabled")">
+                    <a class="page-link" asp-route-page="@(Model.PageNumber + 1)" style="border-radius:.5rem;">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+            <p class="text-center text-muted small mt-2">Page @Model.PageNumber of @Model.TotalPages</p>
+        </nav>
+    }
+}

@@ -1,0 +1,116 @@
+@model List<Application.VendorStores.Queries.GetPublicStores.PublicStoreCardDto>
+@{
+    ViewData["Title"] = "All Stores";
+}
+
+<!-- Page hero -->
+<div class="mv-stores-hero mb-5">
+    <div class="mv-stores-hero__content">
+        <div class="mv-stores-hero__badge"><i class="bi bi-shop-window me-1"></i>Marketplace</div>
+        <h1 class="mv-stores-hero__title">Discover Independent Stores</h1>
+        <p class="mv-stores-hero__sub">@Model.Count store@(Model.Count == 1 ? "" : "s") · Curated vendors all in one place</p>
+    </div>
+    <div class="mv-stores-hero__art" aria-hidden="true">
+        <i class="bi bi-shop"></i>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="mv-stores-filter mb-4">
+    <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="mv-stores-filter__search">
+            <i class="bi bi-search mv-stores-filter__icon"></i>
+            <input type="search" name="q" class="form-control mv-stores-filter__input" placeholder="Search stores…" />
+        </div>
+        <div class="d-flex gap-2 ms-auto">
+            <span class="mv-stores-filter__count">@Model.Count store@(Model.Count == 1 ? "" : "s")</span>
+        </div>
+    </form>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="mv-empty-state text-center py-5">
+        <div class="mv-empty-state__icon mx-auto mb-3"><i class="bi bi-shop-window"></i></div>
+        <h5 class="fw-bold">No active stores yet</h5>
+        <p class="text-muted small">Check back soon — vendors are joining every day.</p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2">Back to home</a>
+    </div>
+}
+else
+{
+    <div class="row g-4" id="storeGrid">
+        @foreach (var s in Model)
+        {
+            <div class="col-md-6 col-xl-4 mv-animate-rise" data-name="@s.Name.ToLower()">
+                <a asp-action="Index" asp-route-slug="@s.Slug" class="text-decoration-none d-block h-100">
+                    <div class="mv-store-card">
+                        <!-- Banner -->
+                        <div class="mv-store-card__banner">
+                            @if (!string.IsNullOrEmpty(s.BannerUrl))
+                            {
+                                <img src="@s.BannerUrl" alt="@s.Name" />
+                            }
+                            else
+                            {
+                                <div class="mv-store-card__banner-placeholder">
+                                    <i class="bi bi-image text-muted opacity-25" style="font-size:3rem;"></i>
+                                </div>
+                            }
+                            <div class="mv-store-card__banner-overlay"></div>
+                        </div>
+                        <!-- Body -->
+                        <div class="mv-store-card__body">
+                            <!-- Logo -->
+                            <div class="mv-store-card__logo-wrap">
+                                @if (!string.IsNullOrEmpty(s.LogoUrl))
+                                {
+                                    <img src="@s.LogoUrl" class="mv-store-card__logo" alt="@s.Name" />
+                                }
+                                else
+                                {
+                                    <div class="mv-store-card__logo mv-store-card__logo-placeholder">
+                                        <i class="bi bi-shop"></i>
+                                    </div>
+                                }
+                            </div>
+                            <div class="mv-store-card__info">
+                                <h5 class="mv-store-card__name">@s.Name</h5>
+                                @if (!string.IsNullOrEmpty(s.VendorBusiness))
+                                {
+                                    <div class="mv-store-card__vendor">
+                                        <i class="bi bi-building me-1"></i>@s.VendorBusiness
+                                    </div>
+                                }
+                            </div>
+                            <div class="mv-store-card__footer">
+                                <span class="mv-store-card__count">
+                                    <i class="bi bi-box-seam me-1"></i>
+                                    @s.ProductCount product@(s.ProductCount == 1 ? "" : "s")
+                                </span>
+                                <span class="mv-store-card__cta">
+                                    Visit store <i class="bi bi-arrow-right ms-1"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var inp = document.querySelector('.mv-stores-filter__input');
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+        var q = this.value.toLowerCase();
+        document.querySelectorAll('#storeGrid > div').forEach(function(el) {
+            el.style.display = (!q || el.dataset.name.includes(q)) ? '' : 'none';
+        });
+    });
+});
+</script>
+}

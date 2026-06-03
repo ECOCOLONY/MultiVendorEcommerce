@@ -1,0 +1,279 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Infrastructure.Identity
+@using MediatR
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject ISender Mediator
+@{
+    int unreadCount = 0;
+    if (SignInManager.IsSignedIn(User))
+    {
+        try { unreadCount = await Mediator.Send(new Application.Notifications.GetMyUnreadCountQuery()); } catch { }
+    }
+    var roleLabel = User.IsInRole("Admin") ? "Admin" : (User.IsInRole("Vendor") ? "Vendor" : "Staff");
+    var roleArea  = User.IsInRole("Admin") ? "Admin" : "Vendor";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+    <title>@ViewData["Title"] - Ramadan Abdullah</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css" />
+    <link rel="stylesheet" href="~/lib/adminlte/css/adminlte.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+    <div class="app-wrapper">
+
+        <!-- Header -->
+        <nav class="app-header navbar navbar-expand bg-body">
+            <div class="container-fluid">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link mv-icon-btn" data-lte-toggle="sidebar" href="#" role="button" aria-label="Toggle sidebar">
+                            <i class="bi bi-list"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item d-none d-md-flex align-items-center ms-2">
+                        <span class="navbar-brand-title">@ViewData["Title"]</span>
+                        <span class="mv-role-pill ms-3"><i class="bi bi-shield-check me-1"></i>@roleLabel panel</span>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item d-none d-md-block">
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>View storefront
+                        </a>
+                    </li>
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link mv-icon-btn position-relative" asp-area="" asp-controller="Notifications" asp-action="Index" title="Notifications">
+                                <i class="bi bi-bell"></i>
+                                @if (unreadCount > 0)
+                                { <span class="mv-badge-dot">@(unreadCount > 9 ? "9+" : unreadCount.ToString())</span> }
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown ms-2">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" href="#" aria-label="User menu">
+                                <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;background:var(--mv-grad-1);color:#fff;font-weight:700;">
+                                    @(User.Identity!.Name?.Substring(0, 1).ToUpper())
+                                </span>
+                                <span class="d-none d-md-inline small">@User.Identity!.Name</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li class="dropdown-header text-truncate">@User.Identity.Name</li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="bi bi-person me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell me-2"></i>Notifications @if (unreadCount > 0) { <span class="badge bg-danger ms-1">@unreadCount</span> }</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-shop me-2"></i>Back to storefront</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="px-2">
+                                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Sidebar -->
+        <aside class="app-sidebar shadow" data-bs-theme="dark">
+            <div class="sidebar-brand">
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="brand-link d-flex align-items-center gap-2">
+                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;background:var(--mv-grad-1);color:#fff;">
+                        <i class="bi bi-shop"></i>
+                    </span>
+                    <span class="brand-text">MVE</span>
+                </a>
+            </div>
+            <div class="sidebar-wrapper">
+                <nav class="mt-2">
+                    <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu">
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-header">ADMIN</li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-speedometer"></i><p>Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Categories" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-tags"></i><p>Categories</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Vendors" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-shop-window"></i><p>Vendors</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Products" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-box-seam"></i><p>Products Approval</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-people"></i><p>Users</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Refunds" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-arrow-counterclockwise"></i><p>Refund Requests</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Reviews" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-star"></i><p>Reviews</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Coupons" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-ticket-perforated"></i><p>Coupons</p>
+                                </a>
+                            </li>
+                            <li class="nav-header">PLATFORM</li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="WebsiteSettings" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-globe2"></i><p>Website &amp; SEO</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="StripeSettings" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-credit-card"></i><p>Stripe payments</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="AuditLogs" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-journal-text"></i><p>Audit Logs</p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Vendor"))
+                        {
+                            <li class="nav-header">VENDOR</li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Home" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-speedometer"></i><p>Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Products" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-box-seam"></i><p>My Products</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Products" asp-action="LowStock" class="nav-link">
+                                    <i class="nav-icon bi bi-exclamation-triangle"></i><p>Low Stock</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Orders" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-bag-check"></i><p>Orders</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Shipments" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-truck"></i><p>Shipments</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Customers" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-people"></i><p>My Customers</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Reviews" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-chat-square-text"></i><p>Reviews</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Coupons" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-ticket-perforated"></i><p>Coupons</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-area="Vendor" asp-controller="Settings" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-gear"></i><p>Store Settings</p>
+                                </a>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="app-main">
+            <div class="app-content">
+                <div class="container-fluid pt-3">
+                    @if (TempData["Success"] is string okMsg)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>@okMsg
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] is string errMsg)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>@errMsg
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @RenderBody()
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="float-end d-none d-sm-inline">v1.0.0</div>
+            <strong>&copy; @DateTime.UtcNow.Year Ramadan Abdullah</strong> â€” All rights reserved.
+        </footer>
+    </div>
+
+    <div id="liveToasts" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1080"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/adminlte/js/adminlte.min.js" asp-append-version="true"></script>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+        <script>
+            (function () {
+                const c = new signalR.HubConnectionBuilder().withUrl('/hubs/notifications').withAutomaticReconnect().build();
+                c.on('notify', (msg) => {
+                    const t = document.createElement('div');
+                    t.className = 'toast align-items-center text-bg-primary border-0';
+                    t.setAttribute('role','alert');
+                    t.innerHTML =
+                        '<div class="d-flex">' +
+                        '  <div class="toast-body">' +
+                        '    <strong>' + (msg.title||'Notification') + '</strong><br/>' +
+                        '    <span class="small">' + (msg.body||'') + '</span>' +
+                        (msg.actionUrl ? '<div><a class="link-light small" href="'+msg.actionUrl+'">Open â†’</a></div>' : '') +
+                        '  </div>' +
+                        '  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+                        '</div>';
+                    document.getElementById('liveToasts').appendChild(t);
+                    new bootstrap.Toast(t, { delay: 6000 }).show();
+                });
+                c.start().catch(e => console.warn('SignalR connect failed', e));
+            })();
+        </script>
+    }
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

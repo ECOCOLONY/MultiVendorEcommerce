@@ -1,0 +1,73 @@
+@using Domain.Enums
+@model List<Application.Notifications.NotificationDto>
+@{
+    ViewData["Title"] = "Notifications";
+
+    string IconClass(NotificationType t) => t switch
+    {
+        NotificationType.OrderUpdate => "bi-bag-check success",
+        NotificationType.Promotion   => "bi-tag warning",
+        NotificationType.Account     => "bi-person info",
+        _                            => "bi-bell"
+    };
+}
+
+<div class="mv-section-head mb-3">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-bell me-2"></i>Notifications</h2>
+        <small class="text-muted">@Model.Count(n => !n.IsRead) unread of @Model.Count total</small>
+    </div>
+    @if (Model.Any(n => !n.IsRead))
+    {
+        <form asp-action="MarkAllRead" method="post">
+            @Html.AntiForgeryToken()
+            <button class="btn btn-outline-primary btn-sm"><i class="bi bi-check2-all me-1"></i>Mark all read</button>
+        </form>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card mv-card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-bell-slash display-3 d-block mb-3 text-muted"></i>
+            <h5>No notifications</h5>
+            <p class="text-muted mb-0">When something happens with your orders or account, it'll show up here.</p>
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var n in Model)
+    {
+        var iconParts = IconClass(n.Type).Split(' ');
+        <div class="mv-notif-row @(n.IsRead ? "" : "unread")">
+            <div class="mv-notif-icon @(iconParts.Length > 1 ? iconParts[1] : "")">
+                <i class="bi @iconParts[0]"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        @if (!n.IsRead) { <span class="badge bg-warning text-dark me-1">New</span> }
+                        <strong>@n.Title</strong>
+                    </div>
+                    <small class="text-muted">@n.CreatedAtUtc.ToString("MMM d, HH:mm")</small>
+                </div>
+                <p class="mb-1 mt-1 small">@n.Body</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    @if (!string.IsNullOrEmpty(n.ActionUrl))
+                    { <a href="@n.ActionUrl" class="small">Open <i class="bi bi-arrow-right"></i></a> }
+                    else
+                    { <span></span> }
+                    @if (!n.IsRead)
+                    {
+                        <form asp-action="MarkRead" asp-route-id="@n.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-link btn-sm p-0 small">Mark read</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}

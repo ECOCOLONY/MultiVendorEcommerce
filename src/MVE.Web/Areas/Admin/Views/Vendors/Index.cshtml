@@ -1,0 +1,97 @@
+@model Application.Common.Models.PaginatedList<Application.Vendors.Queries.GetVendorsList.VendorListItemDto>
+@{
+    ViewData["Title"] = "Vendors";
+    var filter = ViewBag.Filter as bool?;
+    var search = ViewBag.Search as string;
+
+    var route = new Dictionary<string, string?>();
+    if (filter.HasValue)                    route["approved"] = filter.Value.ToString().ToLower();
+    if (!string.IsNullOrWhiteSpace(search)) route["search"]   = search;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Search</label>
+                        <input name="search" value="@search" class="form-control" placeholder="Search by business name…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select name="approved" class="form-select">
+                            <option value="" selected="@(filter is null)">All vendors</option>
+                            <option value="true"  selected="@(filter == true)">Approved only</option>
+                            <option value="false" selected="@(filter == false)">Pending approval</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (!string.IsNullOrWhiteSpace(search) || filter.HasValue)
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-shop-window"></i></div>
+                    <h6>No vendors match</h6>
+                    <p class="text-muted small mb-0">Try a different filter.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Tax #</th>
+                                <th class="text-center">Stores</th>
+                                <th class="text-center">Products</th>
+                                <th class="text-center">Commission</th>
+                                <th class="text-center">Status</th>
+                                <th>Joined</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var v in Model.Items)
+                        {
+                            <tr>
+                                <td><strong>@v.BusinessName</strong></td>
+                                <td>@(v.TaxNumber ?? "—")</td>
+                                <td class="text-center">@v.StoreCount</td>
+                                <td class="text-center">@v.ProductCount</td>
+                                <td class="text-center fw-semibold">@v.DefaultCommissionPercent.ToString("0.##")%</td>
+                                <td class="text-center">
+                                    @if (v.IsApproved) { <span class="mv-pill mv-pill-approved"><i class="bi bi-check-circle"></i>Approved</span> }
+                                    else { <span class="mv-pill mv-pill-pending"><i class="bi bi-hourglass-split"></i>Pending</span> }
+                                </td>
+                                <td class="small text-muted">@v.CreatedAtUtc.ToString("MMM d, yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@v.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Manage</a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

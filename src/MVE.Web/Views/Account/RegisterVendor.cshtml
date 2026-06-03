@@ -1,0 +1,86 @@
+@model Web.Models.ViewModels.Account.RegisterVendorViewModel
+@{
+    ViewData["Title"] = "Become a vendor";
+}
+
+<h2 class="mb-1 fw-bold">Open your store</h2>
+<p class="text-muted mb-4">List your products and reach customers across the marketplace.</p>
+
+<form asp-action="RegisterVendor" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+    <div class="mb-2 small text-uppercase fw-semibold text-muted">Your account</div>
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label small fw-semibold"></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+            <input asp-for="FullName" class="form-control border-start-0 ps-0" placeholder="Jane Doe" />
+        </div>
+        <span asp-validation-for="FullName" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label small fw-semibold"></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
+            <input asp-for="Email" type="email" class="form-control border-start-0 ps-0" placeholder="you@example.com" />
+        </div>
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+    <div class="row g-2">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Password" class="form-label small fw-semibold"></label>
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-lock-fill"></i></span>
+                <input asp-for="Password" type="password" class="form-control border-start-0 ps-0" placeholder="••••••••" />
+            </div>
+            <span asp-validation-for="Password" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="ConfirmPassword" class="form-label small fw-semibold"></label>
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-lock-fill"></i></span>
+                <input asp-for="ConfirmPassword" type="password" class="form-control border-start-0 ps-0" placeholder="••••••••" />
+            </div>
+            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="mb-2 small text-uppercase fw-semibold text-muted mt-3">Your business</div>
+    <div class="mb-3">
+        <label asp-for="BusinessName" class="form-label small fw-semibold"></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
+            <input asp-for="BusinessName" class="form-control border-start-0 ps-0" placeholder="Acme LLC" />
+        </div>
+        <span asp-validation-for="BusinessName" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="StoreName" class="form-label small fw-semibold"></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-shop"></i></span>
+            <input asp-for="StoreName" class="form-control border-start-0 ps-0" placeholder="Acme Store" />
+        </div>
+        <span asp-validation-for="StoreName" class="text-danger small"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="TaxNumber" class="form-label small fw-semibold"></label>
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-receipt"></i></span>
+            <input asp-for="TaxNumber" class="form-control border-start-0 ps-0" placeholder="Optional" />
+        </div>
+        <span asp-validation-for="TaxNumber" class="text-danger small"></span>
+    </div>
+
+    <div class="alert alert-info small d-flex">
+        <i class="bi bi-info-circle me-2 fs-5"></i>
+        <div>New vendor accounts must be approved by an admin before products can be published. You'll get an email when your store is live.</div>
+    </div>
+
+    <button type="submit" class="btn btn-success btn-lg w-100"><i class="bi bi-shop-window me-1"></i>Create vendor account</button>
+</form>
+
+<p class="text-center text-muted small mt-3 mb-0">Already have an account? <a asp-action="Login">Sign in</a></p>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

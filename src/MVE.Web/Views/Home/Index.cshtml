@@ -1,0 +1,325 @@
+﻿@inject Microsoft.Extensions.Localization.IStringLocalizer<Web.SharedResource> L
+@{
+    ViewData["Title"] = "Home";
+    var featured   = ViewBag.Featured   as List<Application.Products.Queries.GetPublicProducts.PublicProductCardDto> ?? new();
+    var categories = ViewBag.Categories as List<Application.Categories.Queries.GetCategoryLookup.CategoryLookupDto>  ?? new();
+
+    static string CatIcon(string name) => name.ToLower() switch {
+        var n when n.Contains("electron") => "bi-cpu",
+        var n when n.Contains("fashion") || n.Contains("cloth") || n.Contains("apparel") => "bi-bag-heart",
+        var n when n.Contains("home")    || n.Contains("furni") || n.Contains("decor")   => "bi-house-heart",
+        var n when n.Contains("book")    || n.Contains("educa")                          => "bi-book",
+        var n when n.Contains("sport")   || n.Contains("fitness")                        => "bi-trophy",
+        var n when n.Contains("toy")     || n.Contains("kid")                            => "bi-controller",
+        var n when n.Contains("beauty")  || n.Contains("health") || n.Contains("care")   => "bi-stars",
+        var n when n.Contains("food")    || n.Contains("grocer")                         => "bi-basket2",
+        var n when n.Contains("auto")    || n.Contains("car")    || n.Contains("vehicle")=> "bi-car-front",
+        var n when n.Contains("garden")  || n.Contains("outdoor")                        => "bi-tree",
+        var n when n.Contains("pet")                                                     => "bi-heart",
+        _ => "bi-grid"
+    };
+
+    string[] catGrads = {
+        "linear-gradient(135deg,#6366f1,#8b5cf6)",
+        "linear-gradient(135deg,#0ea5e9,#6366f1)",
+        "linear-gradient(135deg,#f97316,#ef4444)",
+        "linear-gradient(135deg,#10b981,#06b6d4)",
+        "linear-gradient(135deg,#ec4899,#8b5cf6)",
+        "linear-gradient(135deg,#f59e0b,#f97316)",
+        "linear-gradient(135deg,#14b8a6,#0ea5e9)",
+        "linear-gradient(135deg,#8b5cf6,#ec4899)",
+    };
+}
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     HERO
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<section class="mv-home-hero mb-5">
+    <div class="mv-home-hero__inner">
+        <div class="row align-items-center g-0">
+            <div class="col-lg-6 mv-home-hero__content">
+                <div class="mv-home-hero__badge mb-3">
+                    <i class="bi bi-shop-window me-1"></i>Multi-Vendor Marketplace
+                </div>
+                <h1 class="mv-home-hero__title">
+                    Shop from<br/><span class="mv-home-hero__accent">thousands</span> of<br/>independent stores
+                </h1>
+                <p class="mv-home-hero__sub">
+                    One cart. One checkout. Many vendors. Discover unique products from curated independent stores â€” all in one place.
+                </p>
+
+                <!-- Hero search -->
+                <form asp-controller="Products" asp-action="Index" method="get" class="mv-home-search mb-4">
+                    <div class="mv-home-search__wrap">
+                        <i class="bi bi-search mv-home-search__icon"></i>
+                        <input type="search" name="search" class="mv-home-search__input"
+                               placeholder="Search products, brands, storesâ€¦" autocomplete="off" />
+                        <button type="submit" class="mv-home-search__btn">
+                            Search
+                        </button>
+                    </div>
+                    @if (categories.Any())
+                    {
+                        <div class="mv-home-search__pills mt-2">
+                            <span class="small text-muted me-1">Popular:</span>
+                            @foreach (var c in categories.Take(5))
+                            {
+                                <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@c.Id"
+                                   class="mv-home-search__pill">@c.Name</a>
+                            }
+                        </div>
+                    }
+                </form>
+
+                <div class="d-flex gap-3">
+                    <a asp-controller="Products" asp-action="Index" class="mv-home-hero__cta-primary">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>Browse All Products
+                    </a>
+                    <a asp-controller="Stores" asp-action="List" class="mv-home-hero__cta-secondary">
+                        <i class="bi bi-shop me-1"></i>All Stores
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-flex justify-content-center align-items-center">
+                <div class="mv-home-hero__art" aria-hidden="true">
+                    <div class="mv-home-hero__art-ring mv-home-hero__art-ring--1"></div>
+                    <div class="mv-home-hero__art-ring mv-home-hero__art-ring--2"></div>
+                    <div class="mv-home-hero__art-ring mv-home-hero__art-ring--3"></div>
+                    <div class="mv-home-hero__art-icon">
+                        <i class="bi bi-bag-heart-fill"></i>
+                    </div>
+                    <!-- Floating product chips -->
+                    <div class="mv-home-hero__chip mv-home-hero__chip--1"><i class="bi bi-star-fill text-warning me-1"></i>Top Rated</div>
+                    <div class="mv-home-hero__chip mv-home-hero__chip--2"><i class="bi bi-truck me-1"></i>Free Shipping</div>
+                    <div class="mv-home-hero__chip mv-home-hero__chip--3"><i class="bi bi-shield-check me-1"></i>Secure</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     TRUST STRIP
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="mv-trust-strip mb-5">
+    <div class="row g-0">
+        <div class="col-md-3 mv-trust-item" style="border-right:1px solid rgba(99,102,241,.1)">
+            <div class="mv-trust-icon"><i class="bi bi-shop-window"></i></div>
+            <div>
+                <div class="mv-trust-label">Many Vendors</div>
+                <div class="mv-trust-sub">Independent stores in one place</div>
+            </div>
+        </div>
+        <div class="col-md-3 mv-trust-item" style="border-right:1px solid rgba(99,102,241,.1)">
+            <div class="mv-trust-icon" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#15803d;"><i class="bi bi-truck"></i></div>
+            <div>
+                <div class="mv-trust-label">Fast Delivery</div>
+                <div class="mv-trust-sub">Track per-vendor shipments</div>
+            </div>
+        </div>
+        <div class="col-md-3 mv-trust-item" style="border-right:1px solid rgba(99,102,241,.1)">
+            <div class="mv-trust-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#b45309;"><i class="bi bi-shield-check"></i></div>
+            <div>
+                <div class="mv-trust-label">Buyer Protection</div>
+                <div class="mv-trust-sub">Safe & secure every order</div>
+            </div>
+        </div>
+        <div class="col-md-3 mv-trust-item">
+            <div class="mv-trust-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#dc2626;"><i class="bi bi-arrow-counterclockwise"></i></div>
+            <div>
+                <div class="mv-trust-label">Easy Returns</div>
+                <div class="mv-trust-sub">Hassle-free return policy</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     BROWSE BY CATEGORY
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+@if (categories.Any())
+{
+    <section class="mb-6">
+        <div class="mv-section-header mb-4">
+            <div>
+                <h2 class="mv-section-header__title">Browse by Category</h2>
+                <p class="mv-section-header__sub">Find exactly what you're looking for</p>
+            </div>
+            <a asp-controller="Products" asp-action="Index" class="mv-section-header__link">
+                All categories <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <!-- Category scroll tabs -->
+        <div class="mv-cat-tabs mb-4">
+            <a asp-controller="Products" asp-action="Index" class="mv-cat-tab mv-cat-tab--active">
+                <i class="bi bi-grid me-1"></i>All
+            </a>
+            @foreach (var c in categories.Take(8))
+            {
+                <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@c.Id" class="mv-cat-tab">
+                    <i class="bi @CatIcon(c.Name) me-1"></i>@c.Name
+                </a>
+            }
+        </div>
+
+        <!-- Category grid -->
+        <div class="row g-3">
+            @{ int ci = 0; }
+            @foreach (var c in categories.Take(8))
+            {
+                <div class="col-6 col-sm-4 col-lg-3 col-xl-2 mv-animate-rise">
+                    <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@c.Id" class="mv-cat text-decoration-none">
+                        <div class="mv-cat-icon" style="background:@catGrads[ci % catGrads.Length];color:#fff;">
+                            <i class="bi @CatIcon(c.Name)"></i>
+                        </div>
+                        <span class="small fw-semibold mt-1" style="color:#0f172a;">@c.Name</span>
+                    </a>
+                </div>
+                ci++;
+            }
+        </div>
+    </section>
+}
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     FEATURED PRODUCTS
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+@if (featured.Any())
+{
+    <section class="mb-6">
+        <div class="mv-section-header mb-4">
+            <div>
+                <h2 class="mv-section-header__title">Featured Products</h2>
+                <p class="mv-section-header__sub">Hand-picked picks from top vendors</p>
+            </div>
+            <a asp-controller="Products" asp-action="Index" class="mv-section-header__link">
+                View all <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <!-- Product filter tabs -->
+        <div class="mv-prod-tabs mb-4">
+            <button class="mv-prod-tab mv-prod-tab--active" onclick="filterProducts('all', this)">All</button>
+            <button class="mv-prod-tab" onclick="filterProducts('featured', this)">
+                <i class="bi bi-star me-1"></i>Featured
+            </button>
+            <button class="mv-prod-tab" onclick="filterProducts('new', this)">
+                <i class="bi bi-lightning me-1"></i>New arrivals
+            </button>
+        </div>
+
+        <div class="row g-3 g-lg-4" id="featuredGrid">
+            @{ int pi = 0; }
+            @foreach (var p in featured)
+            {
+                <div class="col-sm-6 col-lg-4 col-xl-3 mv-animate-rise" data-tag="featured">
+                    <partial name="_ProductCard" model="p" />
+                </div>
+                pi++;
+            }
+        </div>
+
+        <div class="text-center mt-4">
+            <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary px-5">
+                <i class="bi bi-grid-3x3-gap me-2"></i>Explore all products
+            </a>
+        </div>
+    </section>
+}
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     BANNERS ROW
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="row g-3 mb-6">
+    <div class="col-md-6">
+        <div class="mv-promo-banner mv-promo-banner--1">
+            <div>
+                <div class="mv-promo-banner__sub">New collection</div>
+                <h3 class="mv-promo-banner__title">Latest arrivals<br/>every week</h3>
+                <a asp-controller="Products" asp-action="Index" class="mv-promo-banner__btn">Shop now <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+            <div class="mv-promo-banner__icon"><i class="bi bi-bag-heart"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mv-promo-banner mv-promo-banner--2">
+            <div>
+                <div class="mv-promo-banner__sub">Become a vendor</div>
+                <h3 class="mv-promo-banner__title">Sell on our<br/>marketplace</h3>
+                <a asp-controller="Account" asp-action="RegisterVendor" class="mv-promo-banner__btn">Start selling <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+            <div class="mv-promo-banner__icon"><i class="bi bi-shop-window"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     HOW IT WORKS
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<section class="mb-6">
+    <div class="mv-section-header mb-5 text-center d-block">
+        <h2 class="mv-section-header__title mb-1">How it works</h2>
+        <p class="mv-section-header__sub">Shopping on MVE is simple</p>
+    </div>
+    <div class="row g-4">
+        @{
+            var steps = new[] {
+                ("bi-search",            "Discover","Browse thousands of products from independent vendors using filters and search."),
+                ("bi-cart-plus",         "Add to cart","Found something you love? Add it to your cart â€” mix from different stores."),
+                ("bi-credit-card-2-front","Checkout","Pay securely once â€” we handle splitting the order between vendors for you."),
+                ("bi-box2-heart",         "Delivered","Each vendor ships their items. Track everything in your orders dashboard."),
+            };
+            int si = 0;
+        }
+        @foreach (var (icon, title, desc) in steps)
+        {
+            <div class="col-sm-6 col-lg-3 mv-animate-rise">
+                <div class="mv-step">
+                    <div class="mv-step__num">@(si + 1)</div>
+                    <div class="mv-step__icon"><i class="bi @icon"></i></div>
+                    <h5 class="mv-step__title">@title</h5>
+                    <p class="mv-step__desc">@desc</p>
+                </div>
+            </div>
+            si++;
+        }
+    </div>
+</section>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     NEWSLETTER (static, design only)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="mv-newsletter mb-4">
+    <div class="mv-newsletter__inner">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+                <h3 class="mv-newsletter__title">Stay in the loop</h3>
+                <p class="mv-newsletter__sub">Get the best deals, new arrivals and vendor spotlights straight to your inbox.</p>
+            </div>
+            <div class="col-lg-6">
+                <div class="d-flex gap-2">
+                    <input type="email" class="form-control mv-newsletter__input" placeholder="your@email.com" />
+                    <button class="btn mv-newsletter__btn">Subscribe</button>
+                </div>
+                <small class="text-muted mt-1 d-block">No spam. Unsubscribe anytime.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function filterProducts(tag, btn) {
+    document.querySelectorAll('.mv-prod-tab').forEach(t => t.classList.remove('mv-prod-tab--active'));
+    btn.classList.add('mv-prod-tab--active');
+    document.querySelectorAll('#featuredGrid > div').forEach(card => {
+        if (tag === 'all' || card.dataset.tag === tag) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+}

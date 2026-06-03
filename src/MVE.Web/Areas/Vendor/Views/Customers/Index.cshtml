@@ -1,0 +1,86 @@
+@model Application.Common.Models.PaginatedList<Application.VendorOrders.Queries.GetMyCustomers.MyCustomerDto>
+@{
+    ViewData["Title"] = "My Customers";
+    var search = ViewBag.Search as string;
+
+    var route = new Dictionary<string, string?>();
+    if (!string.IsNullOrWhiteSpace(search)) route["search"] = search;
+}
+
+<div class="alert alert-info small d-flex shadow-sm mb-3">
+    <i class="bi bi-info-circle me-2 fs-5"></i>
+    <div>This is a <strong>derived view</strong> over your order history — not a customer database. The platform owns customers; you only see those who have purchased from you.</div>
+</div>
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Search</label>
+                        <input name="search" value="@search" class="form-control" placeholder="Customer name…" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (route.Any())
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-people"></i></div>
+                    <h6>No customers yet</h6>
+                    <p class="text-muted small mb-0">When customers buy from your store, they'll show up here.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th class="text-center">Orders</th>
+                                <th class="text-end">Total spent (with me)</th>
+                                <th>Last order</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var c in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;background:var(--mv-grad-1);color:#fff;font-weight:700;">
+                                            @(c.ShippingFullName.Length > 0 ? c.ShippingFullName[0].ToString().ToUpper() : "?")
+                                        </span>
+                                        <strong>@c.ShippingFullName</strong>
+                                    </div>
+                                </td>
+                                <td class="text-center">@c.OrderCount</td>
+                                <td class="text-end fw-bold text-success">@c.TotalSpentMine.ToString("0.00")</td>
+                                <td class="small text-muted">@c.LastOrderAtUtc.ToString("MMM d, yyyy")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

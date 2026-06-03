@@ -1,0 +1,67 @@
+@model List<Application.Categories.Queries.GetCategoriesList.CategoryListItemDto>
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<div class="mv-list">
+    <div class="mv-list-toolbar">
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New category</a>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-tags"></i></div>
+                    <h6>No categories yet</h6>
+                    <p class="text-muted small mb-3">Categories organise the catalog and help customers browse.</p>
+                    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add your first category</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Slug</th>
+                                <th>Parent</th>
+                                <th class="text-center">Order</th>
+                                <th class="text-center">Products</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td><strong>@c.Name</strong></td>
+                                <td><code class="small">@c.Slug</code></td>
+                                <td>@(c.ParentName ?? "—")</td>
+                                <td class="text-center">@c.DisplayOrder</td>
+                                <td class="text-center">@c.ProductCount</td>
+                                <td class="text-center">
+                                    @if (c.IsActive)
+                                    { <span class="mv-pill mv-pill-success"><i class="bi bi-check-circle"></i>Active</span> }
+                                    else
+                                    { <span class="mv-pill mv-pill-muted"><i class="bi bi-pause-circle"></i>Inactive</span> }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary" title="Details"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>

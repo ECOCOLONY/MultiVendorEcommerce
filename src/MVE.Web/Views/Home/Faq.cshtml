@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = "FAQ";
+    var faqs = new (string Q, string A)[]
+    {
+        ("How does the marketplace work?",
+         "We host independent vendor stores under one roof. You browse products from many vendors, fill one cart, and check out once. Each vendor fulfills their own items, and you can track each shipment from your order details page."),
+        ("Are payments real?",
+         "Payments are mocked in this academic build — no card data is collected, transmitted, or stored. The checkout flow demonstrates the full pipeline (place order, capture payment record, refund on cancel) without contacting any real payment provider."),
+        ("Can I cancel an order?",
+         "Yes — go to your order details. If no vendor has prepared their portion of your order yet, you can cancel and the captured payment is refunded automatically and stock is restored."),
+        ("What about refunds after delivery?",
+         "Once an order is marked Delivered, you can request a refund (RMA) with a reason. An admin reviews and either approves (which marks the payment as Refunded and the order as Refunded) or declines."),
+        ("How do coupons work?",
+         "There are platform-wide coupons (created by admin) and vendor-scoped coupons (each vendor manages their own). Enter a code at checkout — we validate the discount value, minimum order amount, expiration window, total uses, and your personal use limit before applying."),
+        ("How do I become a vendor?",
+         "Click \"Sign up as a vendor\" on the login page. You'll create an account and a store profile. An admin reviews and approves new vendors before products can be listed."),
+        ("Do you ship internationally?",
+         "Each vendor configures their own shipping. The marketplace just provides the shared cart, checkout, and tracking surface."),
+        ("What languages are supported?",
+         "English and Türkçe today. Toggle from the language dropdown in the navbar — your choice is remembered.")
+    };
+}
+
+<section class="mv-hero mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <span class="badge bg-light text-primary mb-3">FAQ</span>
+            <h1 class="display-5 mb-3">Frequently asked questions</h1>
+            <p class="lead mb-0">The quick answers. If you don't find yours, <a asp-action="Contact" class="link-light">contact us</a>.</p>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block text-end">
+            <i class="bi bi-question-circle-fill" style="font-size:10rem; opacity:.18; color:#fff;"></i>
+        </div>
+    </div>
+</section>
+
+<div class="row">
+    <div class="col-lg-9 mx-auto">
+        <div class="accordion" id="faqAcc">
+            @for (int i = 0; i < faqs.Length; i++)
+            {
+                var collapseId = $"faq{i}";
+                <div class="accordion-item border-0 mb-2 shadow-sm rounded">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button @(i == 0 ? "" : "collapsed") rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId">
+                            @faqs[i].Q
+                        </button>
+                    </h2>
+                    <div id="@collapseId" class="accordion-collapse collapse @(i == 0 ? "show" : "")" data-bs-parent="#faqAcc">
+                        <div class="accordion-body text-muted">@faqs[i].A</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

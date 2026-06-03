@@ -1,0 +1,88 @@
+@model Web.Models.ViewModels.Vendor.Settings.StoreSettingsViewModel
+@{
+    ViewData["Title"] = "Store Settings";
+}
+
+<form asp-action="Index" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="StoreId" />
+    <input type="hidden" asp-for="LogoUrl" />
+    <input type="hidden" asp-for="BannerUrl" />
+
+    <div asp-validation-summary="All" class="alert alert-danger d-none"></div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">Profile</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <label asp-for="Slug" class="form-label"></label>
+                            <input asp-for="Slug" class="form-control" disabled />
+                            <small class="text-muted">Auto-generated from the store name.</small>
+                        </div>
+                        <div class="col-md-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ContactEmail" class="form-label"></label>
+                            <input asp-for="ContactEmail" class="form-control" type="email" />
+                            <span asp-validation-for="ContactEmail" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ContactPhone" class="form-label"></label>
+                            <input asp-for="ContactPhone" class="form-control" />
+                            <span asp-validation-for="ContactPhone" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save changes</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">Logo</h5></div>
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                    {
+                        <img src="@Model.LogoUrl" alt="Logo" class="img-thumbnail mb-2" style="max-height:120px" />
+                    }
+                    else
+                    {
+                        <div class="text-muted small mb-2">No logo uploaded.</div>
+                    }
+                    <input asp-for="LogoFile" class="form-control" type="file" accept="image/*" />
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header"><h5 class="mb-0">Banner</h5></div>
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.BannerUrl))
+                    {
+                        <img src="@Model.BannerUrl" alt="Banner" class="img-thumbnail mb-2" style="max-height:80px" />
+                    }
+                    else
+                    {
+                        <div class="text-muted small mb-2">No banner uploaded.</div>
+                    }
+                    <input asp-for="BannerFile" class="form-control" type="file" accept="image/*" />
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

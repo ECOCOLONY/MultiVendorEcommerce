@@ -1,0 +1,288 @@
+@using Domain.Enums
+@model Application.Orders.Queries.GetMyOrderById.MyOrderDetailDto
+@{
+    ViewData["Title"] = $"Order {Model.OrderNumber}";
+
+    int stepIndex = Model.Status switch
+    {
+        OrderStatus.PendingPayment => 0,
+        OrderStatus.Paid           => 1,
+        OrderStatus.Processing     => 2,
+        OrderStatus.Shipped        => 3,
+        OrderStatus.Delivered      => 4,
+        OrderStatus.Refunded       => 4,
+        OrderStatus.Cancelled      => -1,
+        _                          => 0
+    };
+    string StepCss(int i) =>
+        Model.Status == OrderStatus.Cancelled ? "is-cancelled" :
+        i < stepIndex   ? "is-done" :
+        i == stepIndex  ? "is-current" :
+                          "";
+    var steps = new[]
+    {
+        ("Placed",     "bi-bag-plus",        Model.PlacedAtUtc),
+        ("Paid",       "bi-credit-card",     Model.PaidAtUtc),
+        ("Processing", "bi-tools",           (DateTime?)null),
+        ("Shipped",    "bi-truck",           (DateTime?)null),
+        (Model.Status == OrderStatus.Refunded ? "Refunded" : "Delivered",
+         "bi-check2-circle",
+         Model.Status == OrderStatus.Refunded ? Model.RefundedAtUtc : null)
+    };
+
+    string BadgeCss = Model.Status switch
+    {
+        OrderStatus.Paid           => "background:#dbeafe;color:#1d4ed8",
+        OrderStatus.Processing     => "background:#e0e7ff;color:#4338ca",
+        OrderStatus.Shipped        => "background:#fef3c7;color:#b45309",
+        OrderStatus.Delivered      => "background:#dcfce7;color:#15803d",
+        OrderStatus.Cancelled      => "background:#fee2e2;color:#b91c1c",
+        OrderStatus.Refunded       => "background:#f1f5f9;color:#475569",
+        _                          => "background:#f1f5f9;color:#64748b"
+    };
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">My Orders</a></li>
+        <li class="breadcrumb-item active">@Model.OrderNumber</li>
+    </ol>
+</nav>
+
+<div class="mv-page-header">
+    <div>
+        <h1 class="mv-page-header__title"><i class="bi bi-receipt"></i>@Model.OrderNumber</h1>
+        <p class="mv-page-header__sub">Placed @(Model.PlacedAtUtc?.ToString("MMMM d, yyyy 'at' HH:mm") ?? "—")</p>
+    </div>
+    <span style="@BadgeCss;padding:.4rem 1rem;border-radius:2rem;font-size:.82rem;font-weight:700;">
+        @Model.Status.ToString()
+    </span>
+</div>
+
+<!-- Timeline -->
+@if (Model.Status == OrderStatus.Cancelled)
+{
+    <div style="background:#fee2e2;border-radius:1rem;padding:2rem;text-align:center;margin-bottom:1.5rem;">
+        <i class="bi bi-x-circle-fill text-danger" style="font-size:2.5rem;"></i>
+        <h5 class="mt-3 mb-1 fw-bold" style="color:#b91c1c;">Order cancelled</h5>
+        @if (Model.CancelledAtUtc.HasValue)
+        { <small class="text-muted">@Model.CancelledAtUtc.Value.ToString("u")</small> }
+    </div>
+}
+else
+{
+    <div style="background:#fff;border-radius:1rem;border:1px solid #f1f5f9;box-shadow:0 2px 16px rgba(0,0,0,.05);padding:1.5rem 2rem;margin-bottom:1.5rem;overflow:hidden;">
+        <div class="mv-timeline">
+            @for (int i = 0; i < steps.Length; i++)
+            {
+                var (label, icon, when) = steps[i];
+                <div class="mv-timeline__step @StepCss(i)">
+                    <div class="mv-timeline__dot"><i class="bi @icon"></i></div>
+                    <div class="mv-timeline__label">@label</div>
+                    @if (when.HasValue)
+                    { <div class="mv-timeline__date">@when.Value.ToString("MMM d, HH:mm")</div> }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Items table -->
+        <div style="background:#fff;border-radius:1rem;border:1px solid #f1f5f9;box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;">
+            <div style="padding:1.15rem 1.5rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:.6rem;">
+                <i class="bi bi-bag-check" style="color:#6366f1;font-size:1.1rem;"></i>
+                <h5 class="mb-0 fw-bold" style="color:#0f172a;">Order items</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle" style="font-size:.88rem;">
+                    <thead style="background:#f8fafc;color:#64748b;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;">
+                        <tr>
+                            <th class="px-4 py-3">Product</th>
+                            <th class="py-3">Vendor</th>
+                            <th class="py-3 text-center">Qty</th>
+                            <th class="py-3 text-end">Unit</th>
+                            <th class="py-3 text-end">Total</th>
+                            <th class="py-3 text-center pe-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var i in Model.Items)
+                        {
+                            <tr style="border-color:#f1f5f9;">
+                                <td class="px-4 py-3 fw-semibold" style="color:#0f172a;">
+                                    @i.ProductName
+                                    @if (!string.IsNullOrEmpty(i.VariantName))
+                                    { <span class="text-muted fw-normal"> — @i.VariantName</span> }
+                                </td>
+                                <td class="py-3 text-muted">@i.StoreName</td>
+                                <td class="py-3 text-center">@i.Quantity</td>
+                                <td class="py-3 text-end">$@i.UnitPrice.ToString("0.00")</td>
+                                <td class="py-3 text-end fw-semibold">$@i.LineTotal.ToString("0.00")</td>
+                                <td class="py-3 text-center pe-4">
+                                    @{
+                                        var (fCss, fLabel) = i.VendorFulfillmentStatus switch
+                                        {
+                                            VendorOrderItemStatus.PendingFulfillment => ("background:#f1f5f9;color:#475569", "Pending"),
+                                            VendorOrderItemStatus.Processing         => ("background:#e0e7ff;color:#4338ca", "Processing"),
+                                            VendorOrderItemStatus.ReadyToShip        => ("background:#dbeafe;color:#1d4ed8", "Ready"),
+                                            VendorOrderItemStatus.Shipped            => ("background:#fef3c7;color:#b45309", "Shipped"),
+                                            VendorOrderItemStatus.Delivered          => ("background:#dcfce7;color:#15803d", "Delivered"),
+                                            VendorOrderItemStatus.Cancelled          => ("background:#fee2e2;color:#b91c1c", "Cancelled"),
+                                            _                                        => ("background:#f1f5f9;color:#64748b", i.VendorFulfillmentStatus.ToString())
+                                        };
+                                    }
+                                    <span style="@fCss;padding:.25rem .65rem;border-radius:2rem;font-size:.73rem;font-weight:700;">@fLabel</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Shipping address -->
+        <div style="background:#fff;border-radius:1rem;border:1px solid #f1f5f9;box-shadow:0 2px 16px rgba(0,0,0,.05);padding:1.5rem;margin-top:1.25rem;">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-geo-alt-fill" style="color:#6366f1;font-size:1.1rem;"></i>
+                <h5 class="mb-0 fw-bold" style="color:#0f172a;">Shipping address</h5>
+            </div>
+            <p class="mb-1 fw-semibold" style="color:#0f172a;">@Model.ShippingFullName</p>
+            <p class="small text-muted lh-lg mb-0">
+                @Model.ShippingLine1<br />
+                @if (!string.IsNullOrEmpty(Model.ShippingLine2)) { @Model.ShippingLine2 <br /> }
+                @Model.ShippingCity@(string.IsNullOrEmpty(Model.ShippingState) ? "" : $", {Model.ShippingState}") @Model.ShippingPostalCode<br />
+                @Model.ShippingCountry
+            </p>
+            @if (!string.IsNullOrEmpty(Model.ShippingPhone))
+            { <p class="small text-muted mt-2 mb-0"><i class="bi bi-telephone me-1 text-primary"></i>@Model.ShippingPhone</p> }
+        </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="col-lg-4">
+        <!-- Summary -->
+        <div style="background:#fff;border-radius:1rem;border:1px solid #f1f5f9;box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;margin-bottom:1.25rem;">
+            <div style="height:3px;background:var(--mv-grad-1);"></div>
+            <div class="p-4">
+                <h5 class="fw-bold mb-3" style="color:#0f172a;">Order summary</h5>
+                <div class="d-flex justify-content-between small py-1 text-muted">
+                    <span>Subtotal</span><span class="text-dark fw-semibold">$@Model.Subtotal.ToString("0.00")</span>
+                </div>
+                <div class="d-flex justify-content-between small py-1 text-muted">
+                    <span>Shipping</span><span class="text-dark fw-semibold">$@Model.ShippingAmount.ToString("0.00")</span>
+                </div>
+                <div class="d-flex justify-content-between small py-1 text-muted">
+                    <span>Tax</span><span class="text-dark fw-semibold">$@Model.TaxAmount.ToString("0.00")</span>
+                </div>
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="d-flex justify-content-between small py-1 text-success">
+                        <span>Discount</span><span>−$@Model.DiscountAmount.ToString("0.00")</span>
+                    </div>
+                }
+                <hr style="border-color:#f1f5f9;margin:.75rem 0;" />
+                <div class="d-flex justify-content-between align-items-baseline">
+                    <span class="fw-bold">Total</span>
+                    <span style="font-size:1.4rem;font-weight:800;background:var(--mv-grad-1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+                        $@Model.Total.ToString("0.00")
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment -->
+        <div style="background:#fff;border-radius:1rem;border:1px solid #f1f5f9;box-shadow:0 2px 16px rgba(0,0,0,.05);padding:1.25rem;">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-credit-card-2-front" style="color:#6366f1;font-size:1.1rem;"></i>
+                <h6 class="mb-0 fw-bold" style="color:#0f172a;">Payment</h6>
+            </div>
+            <div class="small text-muted">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Method</span>
+                    <strong class="text-dark">@(Model.PaymentMethod ?? "—")</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Status</span>
+                    @{
+                        var (pCss, pLabel) = Model.PaymentStatus switch
+                        {
+                            PaymentStatus.Captured   => ("background:#dcfce7;color:#15803d", "Captured"),
+                            PaymentStatus.Pending    => ("background:#f1f5f9;color:#475569", "Pending"),
+                            PaymentStatus.Authorized => ("background:#dbeafe;color:#1d4ed8", "Authorized"),
+                            PaymentStatus.Failed     => ("background:#fee2e2;color:#b91c1c", "Failed"),
+                            PaymentStatus.Refunded   => ("background:#fef3c7;color:#b45309", "Refunded"),
+                            _                        => ("background:#f1f5f9;color:#64748b", "—")
+                        };
+                    }
+                    <span style="@pCss;padding:.2rem .6rem;border-radius:2rem;font-size:.73rem;font-weight:700;">@pLabel</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.RefundRequestedAtUtc.HasValue || Model.Status == OrderStatus.Refunded)
+{
+    <div class="alert @(Model.Status == OrderStatus.Refunded ? "alert-success" : "alert-warning") mt-4">
+        @if (Model.Status == OrderStatus.Refunded)
+        { <span><i class="bi bi-check-circle me-1"></i><strong>Refunded</strong> on @Model.RefundedAtUtc?.ToString("u")</span> }
+        else
+        { <span><i class="bi bi-hourglass-split me-1"></i><strong>Refund requested</strong> on @Model.RefundRequestedAtUtc?.ToString("u")</span> }
+        @if (!string.IsNullOrEmpty(Model.RefundReason))
+        { <div class="small mt-1 text-muted">Reason: @Model.RefundReason</div> }
+    </div>
+}
+
+@{
+    var canCancel = Model.Status != OrderStatus.Cancelled
+                    && Model.Status != OrderStatus.Delivered
+                    && Model.Status != OrderStatus.Refunded
+                    && Model.Items.All(i => (int)i.VendorFulfillmentStatus < (int)VendorOrderItemStatus.ReadyToShip);
+    var canRequestRefund = Model.Status == OrderStatus.Delivered && !Model.RefundRequestedAtUtc.HasValue;
+}
+
+@if (canRequestRefund)
+{
+    <div style="background:#fff;border-radius:1rem;border:1px solid #f1f5f9;box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;margin-top:1.5rem;">
+        <div style="padding:1.15rem 1.5rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:.6rem;">
+            <i class="bi bi-arrow-counterclockwise" style="color:#b45309;font-size:1.1rem;"></i>
+            <h6 class="mb-0 fw-bold" style="color:#0f172a;">Request a refund</h6>
+        </div>
+        <form asp-action="RequestRefund" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="p-4">
+                <textarea name="reason" class="form-control" rows="3" minlength="10" maxlength="2000"
+                          placeholder="Please describe why you'd like a refund (min 10 chars)…" required></textarea>
+            </div>
+            <div class="px-4 pb-4 text-end">
+                <button class="btn btn-outline-secondary me-2">Never mind</button>
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-send me-1"></i>Submit refund request
+                </button>
+            </div>
+        </form>
+    </div>
+}
+
+<div class="mt-4 d-flex flex-wrap justify-content-between gap-2">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to orders
+    </a>
+    <div class="d-flex gap-2 flex-wrap">
+        <a asp-action="Invoice" asp-route-id="@Model.Id" class="btn btn-outline-primary" target="_blank">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Download invoice
+        </a>
+        @if (canCancel)
+        {
+            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post"
+                  onsubmit="return confirm('Cancel this order?');">
+                @Html.AntiForgeryToken()
+                <button class="btn btn-outline-danger">
+                    <i class="bi bi-x-circle me-1"></i>Cancel order
+                </button>
+            </form>
+        }
+    </div>
+</div>

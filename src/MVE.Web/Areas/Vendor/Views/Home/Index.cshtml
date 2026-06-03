@@ -1,0 +1,121 @@
+@model Application.Vendors.Queries.GetMyVendor.MyVendorDto
+@{
+    ViewData["Title"] = "Vendor Dashboard";
+    var salesChart = ViewBag.SalesChart as List<Application.VendorOrders.Queries.GetVendorSalesChart.SalesPointDto> ?? new();
+    var labelsJson  = System.Text.Json.JsonSerializer.Serialize(salesChart.Select(s => s.Date));
+    var revenueJson = System.Text.Json.JsonSerializer.Serialize(salesChart.Select(s => s.Revenue));
+    var netJson     = System.Text.Json.JsonSerializer.Serialize(salesChart.Select(s => s.Net));
+}
+
+@if (!Model.IsApproved)
+{
+    <div class="alert alert-warning d-flex align-items-center mb-3 shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+        <div>
+            <strong>Pending approval.</strong> You can browse the dashboard but cannot publish products until an admin approves your account.
+        </div>
+    </div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-1"><i class="bi bi-shop-window"></i></div>
+            <div class="mv-kpi-num">@ViewData["StoreCount"]</div>
+            <div class="mv-kpi-label">Stores</div>
+            <a asp-controller="Settings" asp-action="Index" class="mv-kpi-link mt-2 d-inline-block">Settings <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-cool"><i class="bi bi-box-seam"></i></div>
+            <div class="mv-kpi-num">@ViewData["ProductCount"]</div>
+            <div class="mv-kpi-label">My products</div>
+            <a asp-controller="Products" asp-action="Index" class="mv-kpi-link mt-2 d-inline-block">Manage <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-warm"><i class="bi bi-bag-check"></i></div>
+            <div class="mv-kpi-num">@ViewData["PendingOrders"]</div>
+            <div class="mv-kpi-label">Pending fulfillment</div>
+            <a asp-controller="Orders" asp-action="Index" class="mv-kpi-link mt-2 d-inline-block">Fulfill <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-2" style="background:linear-gradient(135deg,#ef4444,#dc2626);"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="mv-kpi-num">@ViewData["LowStock"]</div>
+            <div class="mv-kpi-label">Low stock variants</div>
+            <a asp-controller="Products" asp-action="LowStock" class="mv-kpi-link mt-2 d-inline-block">Restock <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="card mv-card mt-4">
+    <div class="card-header bg-white border-0 pt-3"><h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Sales — last 14 days</h5></div>
+    <div class="card-body">
+        <canvas id="salesChart" height="80"></canvas>
+    </div>
+</div>
+
+<div class="card mv-card mt-4">
+    <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-shop me-2"></i>My stores</h5>
+        <a asp-controller="Settings" asp-action="Index" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Edit settings</a>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Stores.Any())
+        {
+            <div class="mv-empty">
+                <div class="mv-empty-icon"><i class="bi bi-shop"></i></div>
+                <h6>No stores yet</h6>
+                <p class="text-muted small mb-0">Once an admin approves your vendor account, your store appears here.</p>
+            </div>
+        }
+        else
+        {
+            <table class="mv-list-table table align-middle">
+                <thead><tr><th>Name</th><th>Slug</th><th class="text-center">Active</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var s in Model.Stores)
+                {
+                    <tr>
+                        <td><strong>@s.Name</strong></td>
+                        <td><code>@(s.Slug ?? "—")</code></td>
+                        <td class="text-center">
+                            @if (s.IsActive) { <span class="mv-pill mv-pill-success"><i class="bi bi-check-circle"></i>Active</span> }
+                            else { <span class="mv-pill mv-pill-muted"><i class="bi bi-pause-circle"></i>Inactive</span> }
+                        </td>
+                        <td class="text-end">
+                            @if (!string.IsNullOrEmpty(s.Slug))
+                            { <a asp-area="" asp-controller="Stores" asp-action="Index" asp-route-slug="@s.Slug" class="btn btn-sm btn-outline-secondary" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>View</a> }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        (function() {
+            const ctx = document.getElementById('salesChart');
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(labelsJson),
+                    datasets: [
+                        { label: 'Revenue', data: @Html.Raw(revenueJson), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,.1)', tension: .3, fill: true },
+                        { label: 'My net',  data: @Html.Raw(netJson),     borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.1)', tension: .3, fill: true }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            });
+        })();
+    </script>
+}

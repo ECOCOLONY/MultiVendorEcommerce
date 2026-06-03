@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "Privacy Policy";
+}
+
+<h1 class="mb-3"><i class="bi bi-shield-check me-2"></i>@ViewData["Title"]</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p>This is an academic demonstration marketplace. The notes below describe how the demo handles user data in this build.</p>
+
+        <h5 class="mt-4">What we store</h5>
+        <ul>
+            <li><strong>Account info</strong> — email, full name, password hash (via ASP.NET Core Identity).</li>
+            <li><strong>Addresses</strong> — only what you save for shipping.</li>
+            <li><strong>Orders, payments (mocked), shipments, reviews, wishlist, cart.</strong></li>
+            <li><strong>Audit log</strong> — login/logout events with IP for traceability.</li>
+        </ul>
+
+        <h5 class="mt-4">Who can see what</h5>
+        <ul>
+            <li><strong>Vendors</strong> see only the customers who have purchased from them, and only the address snapshot saved on the order — not your account email.</li>
+            <li><strong>Other vendors</strong> never see each other's products, orders, or customers.</li>
+            <li><strong>Admins</strong> can view users, orders, audit logs, and moderate content.</li>
+        </ul>
+
+        <h5 class="mt-4">Payments</h5>
+        <p class="text-muted small">Payments are <em>mocked</em> in this academic project — no card data is collected, transmitted, or stored.</p>
+
+        <h5 class="mt-4">Cookies</h5>
+        <p class="text-muted small">Authentication cookie (HttpOnly), antiforgery cookie, and the language-preference cookie. No third-party tracking.</p>
+
+        <h5 class="mt-4">Your rights</h5>
+        <p class="text-muted small">Sign in to update your profile, addresses, or change your password from <a asp-controller="Profile" asp-action="Index">your profile page</a>.</p>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+@using Domain.Enums
+@model Application.Common.Models.PaginatedList<Application.Refunds.Queries.RefundRequestDto>
+@{
+    ViewData["Title"] = "Refund requests";
+    var pendingOnly = (bool?)ViewBag.PendingOnly == true;
+    var search      = ViewBag.Search as string;
+    var dateFrom    = ViewBag.DateFrom as string;
+    var dateTo      = ViewBag.DateTo as string;
+
+    var route = new Dictionary<string, string?> { ["pendingOnly"] = pendingOnly.ToString().ToLower() };
+    if (!string.IsNullOrWhiteSpace(search))   route["search"]   = search;
+    if (!string.IsNullOrWhiteSpace(dateFrom)) route["dateFrom"] = dateFrom;
+    if (!string.IsNullOrWhiteSpace(dateTo))   route["dateTo"]   = dateTo;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Search</label>
+                        <input name="search" value="@search" class="form-control" placeholder="Order # or customer name…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select name="pendingOnly" class="form-select">
+                            <option value="true"  selected="@pendingOnly">Pending only</option>
+                            <option value="false" selected="@(!pendingOnly)">All (incl. refunded)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">From</label>
+                        <input type="date" name="dateFrom" value="@dateFrom" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">To</label>
+                        <input type="date" name="dateTo" value="@dateTo" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(dateFrom) || !string.IsNullOrWhiteSpace(dateTo))
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-arrow-counterclockwise"></i></div>
+                    <h6>No refund requests</h6>
+                    <p class="text-muted small mb-0">When customers request refunds on delivered orders, they appear here.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th class="text-end">Total</th>
+                                <th>Reason</th>
+                                <th>Requested</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var r in Model.Items)
+                        {
+                            <tr>
+                                <td><code>@r.OrderNumber</code></td>
+                                <td>@(r.CustomerName ?? "—")</td>
+                                <td class="text-end fw-semibold">@r.Total.ToString("0.00")</td>
+                                <td><small class="text-muted">@(r.RefundReason ?? "—")</small></td>
+                                <td class="small text-muted">@r.RefundRequestedAtUtc.ToString("MMM d, HH:mm")</td>
+                                <td class="text-center">
+                                    @if (r.Status == OrderStatus.Refunded) { <span class="mv-pill mv-pill-success"><i class="bi bi-check-circle"></i>Refunded</span> }
+                                    else { <span class="mv-pill mv-pill-pending"><i class="bi bi-hourglass-split"></i>Pending</span> }
+                                </td>
+                                <td class="text-end">
+                                    @if (r.Status != OrderStatus.Refunded)
+                                    {
+                                        <form asp-action="Approve" asp-route-id="@r.OrderId" method="post" class="d-inline" onsubmit="return confirm('Approve refund? Payment will be marked Refunded.');">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-sm btn-outline-success" title="Approve"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                        <form asp-action="Reject" asp-route-id="@r.OrderId" method="post" class="d-inline" onsubmit="return confirm('Decline this refund?');">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-sm btn-outline-danger" title="Decline"><i class="bi bi-x-lg"></i></button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

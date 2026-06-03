@@ -1,0 +1,132 @@
+@using Domain.Enums
+@model Application.Common.Models.PaginatedList<Application.Products.Queries.GetMyProducts.MyProductListItemDto>
+@{
+    ViewData["Title"] = "My Products";
+    var search         = ViewBag.Search as string;
+    var approvalStatus = ViewBag.ApprovalStatus as ProductApprovalStatus?;
+    var categoryId     = ViewBag.CategoryId as int?;
+    var categories     = ViewBag.Categories as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+                         ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+
+    var route = new Dictionary<string, string?>();
+    if (!string.IsNullOrWhiteSpace(search))  route["search"]         = search;
+    if (approvalStatus.HasValue)             route["approvalStatus"] = approvalStatus.Value.ToString();
+    if (categoryId.HasValue)                 route["categoryId"]     = categoryId.Value.ToString();
+}
+
+<div class="mv-list">
+    <div class="mv-list-toolbar">
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New product</a>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Product name</label>
+                        <input name="search" value="@search" class="form-control" placeholder="Product name…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <select name="categoryId" class="form-select">
+                            <option value="">All categories</option>
+                            @foreach (var c in categories)
+                            {
+                                <option value="@c.Value" selected="@(categoryId.ToString() == c.Value)">@c.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Approval status</label>
+                        <select name="approvalStatus" class="form-select">
+                            <option value="" selected="@(approvalStatus is null)">All statuses</option>
+                            <option value="Pending"  selected="@(approvalStatus == ProductApprovalStatus.Pending)">Pending</option>
+                            <option value="Approved" selected="@(approvalStatus == ProductApprovalStatus.Approved)">Approved</option>
+                            <option value="Rejected" selected="@(approvalStatus == ProductApprovalStatus.Rejected)">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (route.Any())
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-box-seam"></i></div>
+                    <h6>No products yet</h6>
+                    <p class="text-muted small mb-3">Create your first product — it will appear publicly once an admin approves it.</p>
+                    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add your first product</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:64px"></th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Store</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-center">Variants</th>
+                                <th class="text-center">Stock</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var p in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(p.MainImageUrl))
+                                    { <img src="@p.MainImageUrl" class="rounded" style="width:48px;height:48px;object-fit:cover" /> }
+                                    else
+                                    { <div class="rounded bg-body-secondary text-center" style="width:48px;height:48px;line-height:48px"><i class="bi bi-image"></i></div> }
+                                </td>
+                                <td><strong>@p.Name</strong><br /><small class="text-muted"><code>@p.Slug</code></small></td>
+                                <td>@p.CategoryName</td>
+                                <td>@p.StoreName</td>
+                                <td class="text-end fw-semibold">@p.BasePrice.ToString("0.00")</td>
+                                <td class="text-center">@p.VariantCount</td>
+                                <td class="text-center @(p.TotalStock == 0 ? "text-danger fw-bold" : (p.TotalStock < 5 ? "text-warning fw-bold" : ""))">@p.TotalStock</td>
+                                <td class="text-center">
+                                    @switch (p.ApprovalStatus)
+                                    {
+                                        case ProductApprovalStatus.Approved: <span class="mv-pill mv-pill-approved"><i class="bi bi-check-circle"></i>Approved</span> break;
+                                        case ProductApprovalStatus.Pending:  <span class="mv-pill mv-pill-pending"><i class="bi bi-hourglass-split"></i>Pending</span> break;
+                                        case ProductApprovalStatus.Rejected: <span class="mv-pill mv-pill-rejected"><i class="bi bi-x-circle"></i>Rejected</span> break;
+                                    }
+                                    @if (p.IsPublished) { <span class="mv-pill mv-pill-info ms-1"><i class="bi bi-eye"></i>Published</span> }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline-secondary" title="Details"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

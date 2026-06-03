@@ -1,0 +1,114 @@
+@using Domain.Enums
+@model Application.Common.Models.PaginatedList<Application.VendorOrders.Queries.GetVendorOrders.VendorOrderListItemDto>
+@{
+    ViewData["Title"] = "Orders";
+    var status   = ViewBag.Status as OrderStatus?;
+    var search   = ViewBag.Search as string;
+    var dateFrom = ViewBag.DateFrom as string;
+    var dateTo   = ViewBag.DateTo as string;
+
+    var route = new Dictionary<string, string?>();
+    if (status.HasValue)                         route["status"]   = status.Value.ToString();
+    if (!string.IsNullOrWhiteSpace(search))      route["search"]   = search;
+    if (!string.IsNullOrWhiteSpace(dateFrom))    route["dateFrom"] = dateFrom;
+    if (!string.IsNullOrWhiteSpace(dateTo))      route["dateTo"]   = dateTo;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Search</label>
+                        <input name="search" value="@search" class="form-control" placeholder="Order # or customer…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="" selected="@(status is null)">All statuses</option>
+                            @foreach (var s in Enum.GetValues<OrderStatus>())
+                            {
+                                <option value="@s" selected="@(status == s)">@s</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">From</label>
+                        <input type="date" name="dateFrom" value="@dateFrom" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">To</label>
+                        <input type="date" name="dateTo" value="@dateTo" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (route.Any())
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-bag-check"></i></div>
+                    <h6>No orders yet</h6>
+                    <p class="text-muted small mb-0">When a customer purchases your products, the order shows up here.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Placed</th>
+                                <th class="text-center">My items</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">My net</th>
+                                <th class="text-center">Pending</th>
+                                <th class="text-center">Order status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var o in Model.Items)
+                        {
+                            <tr>
+                                <td><code>@o.OrderNumber</code></td>
+                                <td>@o.CustomerShippingName</td>
+                                <td class="small text-muted">@o.PlacedAtUtc.ToString("MMM d, HH:mm")</td>
+                                <td class="text-center">@o.MyItemCount <small class="text-muted">(×@o.MyTotalQty)</small></td>
+                                <td class="text-end">@o.MyRevenue.ToString("0.00")</td>
+                                <td class="text-end fw-bold text-success">@o.MyVendorNet.ToString("0.00")</td>
+                                <td class="text-center">
+                                    @if (o.PendingItemCount > 0) { <span class="mv-pill mv-pill-warning"><i class="bi bi-hourglass-split"></i>@o.PendingItemCount pending</span> }
+                                    else { <span class="mv-pill mv-pill-success"><i class="bi bi-check-circle"></i>All shipped</span> }
+                                </td>
+                                <td class="text-center"><span class="mv-pill mv-pill-muted">@o.OrderStatus</span></td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@o.OrderId" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Manage</a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

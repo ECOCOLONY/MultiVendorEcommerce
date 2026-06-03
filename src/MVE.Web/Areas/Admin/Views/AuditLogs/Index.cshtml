@@ -1,0 +1,114 @@
+@using Domain.Enums
+@model Application.Common.Models.PaginatedList<Application.AuditLogs.Queries.AuditLogDto>
+@{
+    ViewData["Title"] = "Audit log";
+    var action     = ViewBag.Action as AuditAction?;
+    var userSearch = ViewBag.UserSearch as string;
+    var dateFrom   = ViewBag.DateFrom as string;
+    var dateTo     = ViewBag.DateTo as string;
+
+    var route = new Dictionary<string, string?>();
+    if (action.HasValue)                          route["action"]     = action.Value.ToString();
+    if (!string.IsNullOrWhiteSpace(userSearch))   route["userSearch"] = userSearch;
+    if (!string.IsNullOrWhiteSpace(dateFrom))     route["dateFrom"]   = dateFrom;
+    if (!string.IsNullOrWhiteSpace(dateTo))       route["dateTo"]     = dateTo;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">User</label>
+                        <input name="userSearch" value="@userSearch" class="form-control" placeholder="User ID…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Action</label>
+                        <select name="action" class="form-select">
+                            <option value="" selected="@(action is null)">All actions</option>
+                            @foreach (var a in Enum.GetValues<AuditAction>())
+                            {
+                                <option value="@a" selected="@(action == a)">@a</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">From</label>
+                        <input type="date" name="dateFrom" value="@dateFrom" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">To</label>
+                        <input type="date" name="dateTo" value="@dateTo" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (route.Any())
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-journals"></i></div>
+                    <h6>No audit entries</h6>
+                    <p class="text-muted small mb-0">Login events, approvals, and other key actions are recorded here.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>When</th>
+                                <th>User</th>
+                                <th class="text-center">Action</th>
+                                <th>Entity</th>
+                                <th>Entity Id</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var a in Model.Items)
+                        {
+                            <tr>
+                                <td class="small text-muted">@a.CreatedAtUtc.ToString("MMM d, HH:mm:ss")</td>
+                                <td class="small">@(a.UserId ?? "—")</td>
+                                <td class="text-center">
+                                    @switch (a.Action)
+                                    {
+                                        case AuditAction.Login:         <span class="mv-pill mv-pill-success"><i class="bi bi-box-arrow-in-right"></i>Login</span> break;
+                                        case AuditAction.Logout:        <span class="mv-pill mv-pill-muted"><i class="bi bi-box-arrow-right"></i>Logout</span> break;
+                                        case AuditAction.Create:        <span class="mv-pill mv-pill-info"><i class="bi bi-plus-circle"></i>Create</span> break;
+                                        case AuditAction.Update:        <span class="mv-pill mv-pill-warning"><i class="bi bi-pencil"></i>Update</span> break;
+                                        case AuditAction.Delete:        <span class="mv-pill mv-pill-danger"><i class="bi bi-trash"></i>Delete</span> break;
+                                        case AuditAction.PasswordReset: <span class="mv-pill mv-pill-warning"><i class="bi bi-key"></i>Pwd reset</span> break;
+                                        default:                        <span class="mv-pill mv-pill-muted">@a.Action</span> break;
+                                    }
+                                </td>
+                                <td>@a.EntityName</td>
+                                <td><small><code>@(a.EntityId ?? "—")</code></small></td>
+                                <td class="small text-muted">@(a.IpAddress ?? "—")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,65 @@
+@model Application.Products.Queries.GetPublicProducts.PublicProductCardDto
+@{
+    var hasDiscount = Model.MinVariantPrice.HasValue && Model.MinVariantPrice < Model.BasePrice;
+    var displayPrice = (Model.MinVariantPrice ?? Model.BasePrice).ToString("0.00");
+    var basePrice   = Model.BasePrice.ToString("0.00");
+}
+<article class="mv-product-card-v2 h-100 position-relative">
+    @if (hasDiscount) { <span class="mv-badge-sale">SALE</span> }
+
+    <div class="mv-product-card-v2__media">
+        @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+        {
+            <img src="@Model.MainImageUrl" alt="@Model.Name" loading="lazy" />
+        }
+        else
+        {
+            <div class="mv-product-card-v2__placeholder d-flex align-items-center justify-content-center h-100">
+                <i class="bi bi-image" style="font-size:3rem;opacity:.4;color:#fff"></i>
+            </div>
+        }
+        <span class="mv-product-card-v2__shine" aria-hidden="true"></span>
+        <span class="mv-product-card-v2__hint"><i class="bi bi-eye me-1"></i>View details</span>
+    </div>
+
+    <div class="mv-product-card-v2__body">
+        <span class="mv-product-card-v2__cat">@Model.CategoryName</span>
+
+        <h3 class="mv-product-card-v2__title">
+            <a asp-controller="Products" asp-action="Details" asp-route-slug="@Model.Slug"
+               class="stretched-link text-decoration-none text-reset">@Model.Name</a>
+        </h3>
+
+        <a asp-controller="Stores" asp-action="Index" asp-route-slug="@Model.StoreSlug"
+           class="mv-product-card-v2__store position-relative"
+           style="z-index:2" onclick="event.stopPropagation();">
+            <i class="bi bi-shop me-1"></i>@Model.StoreName
+        </a>
+
+        <div class="mv-product-card-v2__meta">
+            <div class="mv-product-card-v2__price-wrap">
+                <span class="mv-product-card-v2__price">
+                    <span class="mv-product-card-v2__currency">$</span>@displayPrice
+                </span>
+                @if (hasDiscount)
+                {
+                    <span class="mv-product-card-v2__price-old">$@basePrice</span>
+                }
+            </div>
+
+            @if (Model.ReviewCount > 0)
+            {
+                <div class="mv-product-card-v2__rating">
+                    <span class="mv-rating"><i class="bi bi-star-fill"></i> @Model.AverageRating.ToString("0.0")</span>
+                    <div class="mv-product-card-v2__review-count">@Model.ReviewCount rev@(Model.ReviewCount == 1 ? "." : "s.")</div>
+                </div>
+            }
+            else
+            {
+                <div class="mv-product-card-v2__norating">
+                    <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                </div>
+            }
+        </div>
+    </div>
+</article>

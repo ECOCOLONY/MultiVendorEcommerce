@@ -1,0 +1,102 @@
+@model Web.Models.ViewModels.Home.ContactViewModel
+@using Application.Settings
+@{
+    ViewData["Title"] = "Contact us";
+    var site = ViewBag.Site as PublicWebsiteSettingsDto ?? new PublicWebsiteSettingsDto();
+}
+
+<section class="mv-hero mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <span class="badge bg-light text-primary mb-3">Get in touch</span>
+            <h1 class="display-5 mb-3">We'd love to hear from you</h1>
+            <p class="lead mb-0">@(site.SiteTagline ?? "Questions, feedback, or partnership ideas — drop us a line and we'll reply within a business day.")</p>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block text-end">
+            <i class="bi bi-chat-dots-fill" style="font-size:10rem; opacity:.18; color:#fff;"></i>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card mv-card">
+            <div class="card-header bg-white border-0 pt-3"><h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Send a message</h5></div>
+            <form asp-action="Contact" method="post">
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Name" class="form-label small fw-semibold"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label small fw-semibold"></label>
+                            <input asp-for="Email" type="email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Subject" class="form-label small fw-semibold"></label>
+                            <input asp-for="Subject" class="form-control" />
+                            <span asp-validation-for="Subject" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Message" class="form-label small fw-semibold"></label>
+                            <textarea asp-for="Message" rows="6" class="form-control"></textarea>
+                            <span asp-validation-for="Message" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pb-3 text-end">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Send message</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card mv-card mb-3">
+            <div class="card-body">
+                <h6 class="text-muted small text-uppercase">Email us</h6>
+                @if (!string.IsNullOrWhiteSpace(site.ContactEmail))
+                {
+                    <p class="mb-3"><i class="bi bi-envelope me-2 text-primary"></i><a href="mailto:@site.ContactEmail" class="text-decoration-none">@site.ContactEmail</a></p>
+                }
+                else
+                {
+                    <p class="mb-3 text-muted small">Not configured yet.</p>
+                }
+                <h6 class="text-muted small text-uppercase">Call us</h6>
+                @if (!string.IsNullOrWhiteSpace(site.ContactPhone))
+                {
+                    <p class="mb-3"><i class="bi bi-telephone me-2 text-primary"></i>@site.ContactPhone</p>
+                }
+                else
+                {
+                    <p class="mb-3 text-muted small">—</p>
+                }
+                <h6 class="text-muted small text-uppercase">Visit</h6>
+                @if (!string.IsNullOrWhiteSpace(site.ContactAddress))
+                {
+                    <p class="mb-0"><i class="bi bi-geo-alt me-2 text-primary"></i>@site.ContactAddress</p>
+                }
+                else
+                {
+                    <p class="mb-0 text-muted small">—</p>
+                }
+            </div>
+        </div>
+        <div class="card mv-card">
+            <div class="card-body">
+                <h6 class="mb-3"><i class="bi bi-lightning-charge me-2"></i>Faster help</h6>
+                <p class="small text-muted mb-2">Already an order question? Sign in and check <a asp-controller="Orders" asp-action="Index">My Orders</a> — most questions can be answered there.</p>
+                <p class="small text-muted mb-0">Common topics live in our <a asp-action="Faq">FAQ</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,118 @@
+@model Application.Common.Models.PaginatedList<Application.Reviews.Queries.AdminReviewDto>
+@{
+    ViewData["Title"] = "Reviews moderation";
+    var filter        = ViewBag.Filter as bool?;
+    var rating        = ViewBag.Rating as int?;
+    var productSearch = ViewBag.ProductSearch as string;
+
+    var route = new Dictionary<string, string?>();
+    if (filter.HasValue)                             route["approved"]       = filter.Value.ToString().ToLower();
+    if (rating.HasValue)                             route["rating"]         = rating.Value.ToString();
+    if (!string.IsNullOrWhiteSpace(productSearch))   route["productSearch"]  = productSearch;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Product name</label>
+                        <input name="productSearch" value="@productSearch" class="form-control" placeholder="Product name…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Rating</label>
+                        <select name="rating" class="form-select">
+                            <option value="" selected="@(rating is null)">Any rating</option>
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <option value="@i" selected="@(rating == i)">@(new string('★', i)) (@i)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select name="approved" class="form-select">
+                            <option value="" selected="@(filter is null)">All</option>
+                            <option value="false" selected="@(filter == false)">Pending</option>
+                            <option value="true"  selected="@(filter == true)">Approved</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (route.Any())
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-chat-square-text"></i></div>
+                    <h6>No reviews match</h6>
+                    <p class="text-muted small mb-0">Try a different filter.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Rating</th>
+                                <th>Title</th>
+                                <th>Comment</th>
+                                <th class="text-center">Status</th>
+                                <th>Submitted</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var r in Model.Items)
+                        {
+                            <tr>
+                                <td><strong>@r.ProductName</strong></td>
+                                <td class="text-center"><span class="text-warning">@(new string('★', r.Rating))<span class="text-muted">@(new string('★', 5 - r.Rating))</span></span></td>
+                                <td>@(r.Title ?? "—")</td>
+                                <td><small class="text-muted">@(r.Comment is null ? "—" : (r.Comment.Length > 80 ? r.Comment.Substring(0, 77) + "..." : r.Comment))</small></td>
+                                <td class="text-center">
+                                    @if (r.IsApproved) { <span class="mv-pill mv-pill-approved"><i class="bi bi-check-circle"></i>Approved</span> }
+                                    else { <span class="mv-pill mv-pill-pending"><i class="bi bi-hourglass-split"></i>Pending</span> }
+                                </td>
+                                <td class="small text-muted">@r.CreatedAtUtc.ToString("MMM d, HH:mm")</td>
+                                <td class="text-end">
+                                    <form asp-action="SetApproval" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.Id" />
+                                        @if (!r.IsApproved)
+                                        {
+                                            <button name="isApproved" value="true" class="btn btn-sm btn-outline-success" title="Approve"><i class="bi bi-check-lg"></i></button>
+                                        }
+                                        else
+                                        {
+                                            <button name="isApproved" value="false" class="btn btn-sm btn-outline-secondary" title="Unapprove"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                        }
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

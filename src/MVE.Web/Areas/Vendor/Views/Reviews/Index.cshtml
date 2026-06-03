@@ -1,0 +1,109 @@
+@model Application.Common.Models.PaginatedList<Application.Reviews.Queries.VendorReviewDto>
+@{
+    ViewData["Title"] = "Reviews";
+    var filter        = ViewBag.Filter as bool?;
+    var rating        = ViewBag.Rating as int?;
+    var productSearch = ViewBag.ProductSearch as string;
+
+    var route = new Dictionary<string, string?>();
+    if (filter.HasValue)                             route["approved"]      = filter.Value.ToString().ToLower();
+    if (rating.HasValue)                             route["rating"]        = rating.Value.ToString();
+    if (!string.IsNullOrWhiteSpace(productSearch))   route["productSearch"] = productSearch;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Product name</label>
+                        <input name="productSearch" value="@productSearch" class="form-control" placeholder="Product name…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Rating</label>
+                        <select name="rating" class="form-select">
+                            <option value="" selected="@(rating is null)">Any rating</option>
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <option value="@i" selected="@(rating == i)">@(new string('★', i)) (@i)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select name="approved" class="form-select">
+                            <option value="" selected="@(filter is null)">All</option>
+                            <option value="false" selected="@(filter == false)">Pending</option>
+                            <option value="true"  selected="@(filter == true)">Approved</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (route.Any())
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-chat-square-text"></i></div>
+                    <h6>No reviews match</h6>
+                    <p class="text-muted small mb-0">Try a different filter.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body">
+                @foreach (var rv in Model.Items)
+                {
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>@rv.ProductName</strong>
+                                    <span class="text-warning ms-2">@(new string('★', rv.Rating))<span class="text-muted">@(new string('★', 5 - rv.Rating))</span></span>
+                                    @if (rv.IsApproved) { <span class="badge bg-success ms-2">Approved</span> }
+                                    else { <span class="badge bg-warning text-dark ms-2">Pending moderation</span> }
+                                </div>
+                                <small class="text-muted">@rv.CreatedAtUtc.ToString("yyyy-MM-dd")</small>
+                            </div>
+                            @if (!string.IsNullOrEmpty(rv.Title)) { <h6 class="mt-2 mb-1">@rv.Title</h6> }
+                            @if (!string.IsNullOrEmpty(rv.Comment)) { <p class="mb-0">@rv.Comment</p> }
+
+                            @if (!string.IsNullOrEmpty(rv.VendorReply))
+                            {
+                                <div class="mt-3 ps-3 border-start">
+                                    <div class="small text-muted mb-1"><i class="bi bi-shop me-1"></i>Your reply · @rv.VendorRepliedAtUtc?.ToString("yyyy-MM-dd")</div>
+                                    <p class="mb-0 fst-italic">@rv.VendorReply</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <form asp-action="Reply" asp-route-id="@rv.Id" method="post" class="mt-3">
+                                    @Html.AntiForgeryToken()
+                                    <div class="input-group">
+                                        <textarea name="reply" class="form-control" rows="2" placeholder="Reply to this review..." maxlength="2000" required></textarea>
+                                        <button class="btn btn-primary"><i class="bi bi-send me-1"></i>Reply</button>
+                                    </div>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

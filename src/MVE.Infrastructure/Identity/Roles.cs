@@ -1,0 +1,11 @@
+namespace Infrastructure.Identity;
+
+public static class Roles
+{
+    public const string Admin    = "Admin";
+    public const string Vendor   = "Vendor";
+    public const string Customer = "Customer";
+    public const string Delivery = "Delivery";
+
+    public static readonly string[] All = { Admin, Vendor, Customer, Delivery };
+}

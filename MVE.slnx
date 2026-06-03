@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MVE.Application/MVE.Application.csproj" />
+    <Project Path="src/MVE.Domain/MVE.Domain.csproj" />
+    <Project Path="src/MVE.Infrastructure/MVE.Infrastructure.csproj" />
+    <Project Path="src/MVE.Web/MVE.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MVE.Application.UnitTests/MVE.Application.UnitTests.csproj" />
+  </Folder>
+</Solution>

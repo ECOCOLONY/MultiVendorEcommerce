@@ -1,0 +1,75 @@
+@model List<Application.Addresses.Queries.GetMyAddresses.AddressDto>
+@{
+    ViewData["Title"] = "Addresses";
+}
+
+<div class="mv-page-header">
+    <div>
+        <h1 class="mv-page-header__title"><i class="bi bi-geo-alt"></i>My Addresses</h1>
+        <p class="mv-page-header__sub">@Model.Count saved address@(Model.Count == 1 ? "" : "es")</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add address
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="mv-empty-state">
+        <div class="mv-empty-state__icon"><i class="bi bi-geo-alt"></i></div>
+        <h4>No addresses yet</h4>
+        <p>Add a shipping address to speed up checkout.</p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add your first address
+        </a>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var a in Model)
+        {
+            <div class="col-lg-4 col-md-6">
+                <div class="mv-address-card @(a.IsDefault ? "is-default" : "")">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="mv-address-card__icon">
+                            <i class="bi bi-house-door"></i>
+                        </div>
+                        @if (a.IsDefault)
+                        {
+                            <span class="badge" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:.72rem;">
+                                <i class="bi bi-star-fill me-1"></i>Default
+                            </span>
+                        }
+                    </div>
+                    <h6 class="fw-bold mb-2" style="color:#0f172a;">@(a.Label ?? "Address")</h6>
+                    <p class="small text-muted mb-0 lh-lg">
+                        @a.Line1<br />
+                        @if (!string.IsNullOrEmpty(a.Line2)) { @a.Line2 <br /> }
+                        @a.City@(string.IsNullOrEmpty(a.State) ? "" : $", {a.State}") @a.PostalCode<br />
+                        @a.Country
+                    </p>
+                    @if (!string.IsNullOrEmpty(a.Phone))
+                    {
+                        <p class="small text-muted mt-2 mb-0">
+                            <i class="bi bi-telephone me-1 text-primary"></i>@a.Phone
+                        </p>
+                    }
+
+                    <div class="d-flex gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                        <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary flex-grow-1">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </a>
+                        <form asp-action="Delete" asp-route-id="@a.Id" method="post"
+                              onsubmit="return confirm('Delete this address?');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

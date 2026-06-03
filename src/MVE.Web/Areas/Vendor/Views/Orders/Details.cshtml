@@ -1,0 +1,111 @@
+@using Domain.Enums
+@model Application.VendorOrders.Queries.GetVendorOrderById.VendorOrderDetailDto
+@{
+    ViewData["Title"] = $"Order {Model.OrderNumber}";
+    var canShip = Model.Items.Any(i => (int)i.VendorFulfillmentStatus < (int)VendorOrderItemStatus.Shipped);
+    var hasShipment = Model.Shipments.Any();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">@Model.OrderNumber</h2>
+        <small class="text-muted">Placed @(Model.PlacedAtUtc?.ToString("u") ?? "—")</small>
+    </div>
+    <div><span class="badge bg-secondary fs-6">@Model.OrderStatus</span></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">My items</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light"><tr><th>Product</th><th class="text-center">Qty</th><th class="text-end">Unit</th><th class="text-end">Total</th><th class="text-end">My net</th><th class="text-center" style="width:240px">Fulfillment</th></tr></thead>
+                    <tbody>
+                    @foreach (var i in Model.Items)
+                    {
+                        <tr>
+                            <td><strong>@i.ProductName</strong>@(string.IsNullOrEmpty(i.VariantName) ? "" : $" — {i.VariantName}")</td>
+                            <td class="text-center">@i.Quantity</td>
+                            <td class="text-end">@i.UnitPrice.ToString("0.00")</td>
+                            <td class="text-end">@i.LineTotal.ToString("0.00")</td>
+                            <td class="text-end text-success">@i.VendorNetAmount.ToString("0.00")</td>
+                            <td class="text-center">
+                                <form asp-action="SetItemStatus" method="post" class="d-flex gap-1">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.OrderId" />
+                                    <input type="hidden" name="orderItemId" value="@i.Id" />
+                                    <select name="status" class="form-select form-select-sm">
+                                        @foreach (VendorOrderItemStatus s in Enum.GetValues(typeof(VendorOrderItemStatus)))
+                                        { <option value="@s" selected="@(s == i.VendorFulfillmentStatus)">@s</option> }
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-secondary" title="Update"><i class="bi bi-arrow-clockwise"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr><td colspan="3" class="text-end fw-bold">My subtotal:</td><td class="text-end fw-bold">@Model.MyRevenue.ToString("0.00")</td><td class="text-end fw-bold text-success">@Model.MyVendorNet.ToString("0.00")</td><td></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-3">
+            <div class="card-header"><h5 class="mb-0">Shipping address (snapshot)</h5></div>
+            <div class="card-body">
+                <p class="mb-1">@Model.ShippingFullName</p>
+                <p class="mb-1">@Model.ShippingLine1</p>
+                @if (!string.IsNullOrEmpty(Model.ShippingLine2)) { <p class="mb-1">@Model.ShippingLine2</p> }
+                <p class="mb-1">@Model.ShippingCity@(string.IsNullOrEmpty(Model.ShippingState) ? "" : $", {Model.ShippingState}") @Model.ShippingPostalCode</p>
+                <p class="mb-1">@Model.ShippingCountry</p>
+                @if (!string.IsNullOrEmpty(Model.ShippingPhone)) { <p class="mb-0 text-muted small"><i class="bi bi-telephone me-1"></i>@Model.ShippingPhone</p> }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Shipment</h5></div>
+            <div class="card-body">
+                @if (hasShipment)
+                {
+                    foreach (var s in Model.Shipments)
+                    {
+                        <p class="mb-1"><strong>@s.Carrier</strong></p>
+                        <p class="mb-1">Tracking: <code>@s.TrackingNumber</code></p>
+                        <p class="mb-1">Status: <span class="badge bg-info">@s.Status</span></p>
+                        @if (s.ShippedAtUtc.HasValue) { <p class="mb-0 small text-muted">Shipped @s.ShippedAtUtc.Value.ToString("u")</p> }
+                    }
+                }
+                else if (canShip)
+                {
+                    <form asp-action="CreateShipment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <div class="mb-2">
+                            <label class="form-label small">Carrier</label>
+                            <input name="carrier" class="form-control form-control-sm" placeholder="UPS, FedEx, ..." required />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Tracking number</label>
+                            <input name="trackingNumber" class="form-control form-control-sm" required />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">ETA</label>
+                            <input name="estimatedDeliveryAtUtc" type="date" class="form-control form-control-sm" />
+                        </div>
+                        <button class="btn btn-primary w-100"><i class="bi bi-truck me-1"></i>Ship items</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">All your items are already shipped.</p>
+                }
+            </div>
+        </div>
+
+        <div class="mt-3"><a asp-action="Index" class="btn btn-secondary w-100"><i class="bi bi-arrow-left me-1"></i>Back to orders</a></div>
+    </div>
+</div>

@@ -1,0 +1,101 @@
+@model Application.Common.Models.PaginatedList<Application.Common.Interfaces.UserSummary>
+@{
+    ViewData["Title"] = "Users";
+    var search    = ViewBag.Search as string;
+    var role      = ViewBag.Role as string;
+    string[] roles = ViewBag.AllRoles as string[] ?? Array.Empty<string>();
+
+    var route = new Dictionary<string, string?>();
+    if (!string.IsNullOrWhiteSpace(search)) route["search"] = search;
+    if (!string.IsNullOrWhiteSpace(role))   route["role"]   = role;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Search</label>
+                        <input name="search" value="@search" class="form-control" placeholder="Search by name or email…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select">
+                            <option value="" selected="@(string.IsNullOrEmpty(role))">All roles</option>
+                            @foreach (var r in roles)
+                            {
+                                <option value="@r" selected="@(role == r)">@r</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(role))
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-people"></i></div>
+                    <h6>No users match</h6>
+                    <p class="text-muted small mb-0">Try a different search term or role filter.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Full name</th>
+                                <th>Email</th>
+                                <th>Roles</th>
+                                <th>Joined</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var u in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;background:var(--mv-grad-1);color:#fff;font-weight:700;">
+                                            @(u.FullName.Length > 0 ? u.FullName[0].ToString().ToUpper() : "?")
+                                        </span>
+                                        <strong>@u.FullName</strong>
+                                    </div>
+                                </td>
+                                <td class="text-muted">@u.Email</td>
+                                <td>
+                                    @foreach (var r in u.Roles)
+                                    { <span class="mv-pill mv-pill-info me-1">@r</span> }
+                                </td>
+                                <td class="small text-muted">@u.CreatedAtUtc.ToString("MMM d, yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Manage</a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

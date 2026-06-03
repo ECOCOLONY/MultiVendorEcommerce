@@ -1,0 +1,46 @@
+@* Model: (int PageNumber, int TotalPages, int TotalCount, bool HasPrevious, bool HasNext, Dictionary<string,string?> Route) *@
+@model (int PageNumber, int TotalPages, int TotalCount, bool HasPrevious, bool HasNext, System.Collections.Generic.Dictionary<string, string?> Route)
+
+@{
+    var prev = new System.Collections.Generic.Dictionary<string, string?>(Model.Route) { ["page"] = (Model.PageNumber - 1).ToString() };
+    var next = new System.Collections.Generic.Dictionary<string, string?>(Model.Route) { ["page"] = (Model.PageNumber + 1).ToString() };
+}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <small class="text-muted">
+        Showing page <strong>@Model.PageNumber</strong> of <strong>@Model.TotalPages</strong>
+        &nbsp;·&nbsp; @Model.TotalCount total
+    </small>
+    <nav>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(!Model.HasPrevious ? "disabled" : "")">
+                <a class="page-link" asp-all-route-data="@prev"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            @{
+                int start = Math.Max(1, Model.PageNumber - 2);
+                int end   = Math.Min(Model.TotalPages, Model.PageNumber + 2);
+                if (start > 1)
+                {
+                    var p1 = new System.Collections.Generic.Dictionary<string, string?>(Model.Route) { ["page"] = "1" };
+                    <li class="page-item"><a class="page-link" asp-all-route-data="@p1">1</a></li>
+                    if (start > 2) { <li class="page-item disabled"><span class="page-link">…</span></li> }
+                }
+                for (int i = start; i <= end; i++)
+                {
+                    var pi = new System.Collections.Generic.Dictionary<string, string?>(Model.Route) { ["page"] = i.ToString() };
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link" asp-all-route-data="@pi">@i</a>
+                    </li>
+                }
+                if (end < Model.TotalPages)
+                {
+                    if (end < Model.TotalPages - 1) { <li class="page-item disabled"><span class="page-link">…</span></li> }
+                    var pLast = new System.Collections.Generic.Dictionary<string, string?>(Model.Route) { ["page"] = Model.TotalPages.ToString() };
+                    <li class="page-item"><a class="page-link" asp-all-route-data="@pLast">@Model.TotalPages</a></li>
+                }
+            }
+            <li class="page-item @(!Model.HasNext ? "disabled" : "")">
+                <a class="page-link" asp-all-route-data="@next"><i class="bi bi-chevron-right"></i></a>
+            </li>
+        </ul>
+    </nav>
+</div>

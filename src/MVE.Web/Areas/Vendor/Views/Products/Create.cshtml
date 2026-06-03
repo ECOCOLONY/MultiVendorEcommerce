@@ -1,0 +1,134 @@
+@model Web.Models.ViewModels.Vendor.Products.ProductCreateViewModel
+@{
+    ViewData["Title"] = "New Product";
+}
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger small d-none"></div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">Product info</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="VendorStoreId" class="form-label"></label>
+                            <select asp-for="VendorStoreId" asp-items="Model.Stores" class="form-select"></select>
+                            <span asp-validation-for="VendorStoreId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select">
+                                <option value="">— select —</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="BasePrice" class="form-label"></label>
+                            <input asp-for="BasePrice" class="form-control" type="number" step="0.01" />
+                            <span asp-validation-for="BasePrice" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Variants</h5>
+                    <button type="button" id="addVariantBtn" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg me-1"></i>Add variant</button>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table mb-0 align-middle" id="variantTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>SKU</th><th>Color</th><th>Size</th>
+                                <th class="text-end">Price</th><th class="text-end">Stock</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Variants.Count; i++)
+                            {
+                                <tr class="variant-row">
+                                    <td><input name="Variants[@i].Sku" value="@Model.Variants[i].Sku" class="form-control form-control-sm" required /></td>
+                                    <td><input name="Variants[@i].Color" value="@Model.Variants[i].Color" class="form-control form-control-sm" /></td>
+                                    <td><input name="Variants[@i].Size" value="@Model.Variants[i].Size" class="form-control form-control-sm" /></td>
+                                    <td><input name="Variants[@i].Price" value="@Model.Variants[i].Price" type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end" required /></td>
+                                    <td><input name="Variants[@i].StockQuantity" value="@Model.Variants[i].StockQuantity" type="number" min="0" class="form-control form-control-sm text-end" required /></td>
+                                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-variant"><i class="bi bi-x"></i></button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">Images</h5></div>
+                <div class="card-body">
+                    <input asp-for="ImageFiles" type="file" multiple accept="image/*" class="form-control" />
+                    <small class="text-muted d-block mt-2">First image becomes the main thumbnail.</small>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-body">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-lg me-1"></i>Create product</button>
+                    <a asp-action="Index" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            const tbody = document.querySelector('#variantTable tbody');
+            const addBtn = document.getElementById('addVariantBtn');
+
+            function reindex() {
+                tbody.querySelectorAll('tr.variant-row').forEach((row, idx) => {
+                    row.querySelectorAll('input').forEach(inp => {
+                        inp.name = inp.name.replace(/Variants\[\d+\]\./, `Variants[${idx}].`);
+                    });
+                });
+            }
+
+            addBtn.addEventListener('click', () => {
+                const idx = tbody.querySelectorAll('tr.variant-row').length;
+                const tr = document.createElement('tr');
+                tr.className = 'variant-row';
+                tr.innerHTML = `
+                    <td><input name="Variants[${idx}].Sku" class="form-control form-control-sm" required /></td>
+                    <td><input name="Variants[${idx}].Color" class="form-control form-control-sm" /></td>
+                    <td><input name="Variants[${idx}].Size" class="form-control form-control-sm" /></td>
+                    <td><input name="Variants[${idx}].Price" type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end" value="1.00" required /></td>
+                    <td><input name="Variants[${idx}].StockQuantity" type="number" min="0" class="form-control form-control-sm text-end" value="0" required /></td>
+                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-variant"><i class="bi bi-x"></i></button></td>`;
+                tbody.appendChild(tr);
+            });
+
+            tbody.addEventListener('click', e => {
+                if (e.target.closest('.remove-variant')) {
+                    const rows = tbody.querySelectorAll('tr.variant-row');
+                    if (rows.length > 1) { e.target.closest('tr').remove(); reindex(); }
+                }
+            });
+        })();
+    </script>
+}

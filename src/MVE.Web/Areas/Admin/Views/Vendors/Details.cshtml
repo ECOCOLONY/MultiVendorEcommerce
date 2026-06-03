@@ -1,0 +1,88 @@
+@model Application.Vendors.Queries.GetVendorById.VendorDetailDto
+@{
+    ViewData["Title"] = $"Vendor — {Model.BusinessName}";
+}
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Vendor info</h5></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Business name</dt>     <dd class="col-sm-8">@Model.BusinessName</dd>
+                    <dt class="col-sm-4">Tax number</dt>        <dd class="col-sm-8">@(Model.TaxNumber ?? "—")</dd>
+                    <dt class="col-sm-4">Approved</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsApproved) { <span class="badge bg-success">Approved</span> }
+                        else { <span class="badge bg-warning text-dark">Pending</span> }
+                    </dd>
+                    <dt class="col-sm-4">Commission</dt>        <dd class="col-sm-8">@Model.DefaultCommissionPercent.ToString("0.##")%</dd>
+                    <dt class="col-sm-4">Joined</dt>            <dd class="col-sm-8">@Model.CreatedAtUtc.ToString("u")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-3">
+            <div class="card-header"><h5 class="mb-0">Stores</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light"><tr><th>Name</th><th>Slug</th><th class="text-center">Active</th><th class="text-center">Products</th></tr></thead>
+                    <tbody>
+                    @foreach (var s in Model.Stores)
+                    {
+                        <tr>
+                            <td>@s.Name</td>
+                            <td><code>@(s.Slug ?? "—")</code></td>
+                            <td class="text-center">@(s.IsActive ? "Yes" : "No")</td>
+                            <td class="text-center">@s.ProductCount</td>
+                        </tr>
+                    }
+                    @if (!Model.Stores.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-3">No stores yet.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Approval</h5></div>
+            <div class="card-body">
+                @if (Model.IsApproved)
+                {
+                    <p class="text-muted">Vendor is currently <strong>approved</strong>. They can list and sell products.</p>
+                    <form asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                        <button class="btn btn-outline-danger w-100"><i class="bi bi-x-circle me-1"></i>Revoke approval</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted">Vendor is <strong>pending</strong>. Approving activates all their stores.</p>
+                    <form asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                        <button class="btn btn-success w-100"><i class="bi bi-check-circle me-1"></i>Approve vendor</button>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-3">
+            <div class="card-header"><h5 class="mb-0">Commission</h5></div>
+            <div class="card-body">
+                <form asp-action="SetCommission" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
+                    <div class="input-group">
+                        <input name="commissionPercent" type="number" step="0.01" min="0" max="100"
+                               value="@Model.DefaultCommissionPercent.ToString("0.##")" class="form-control" required />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <button class="btn btn-primary"><i class="bi bi-save"></i></button>
+                </form>
+                <small class="text-muted">Snapshotted onto each new order line.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3"><a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Back to vendors</a></div>

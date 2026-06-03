@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Access denied";
+    Layout = "_PublicLayout";
+}
+
+<div class="card mv-card mt-4">
+    <div class="card-body text-center py-5">
+        <div class="mv-cat-icon mx-auto mb-3" style="background:#fee2e2;color:#dc2626;font-size:2rem;width:80px;height:80px;">
+            <i class="bi bi-shield-lock"></i>
+        </div>
+        <h2 class="mt-2">Access denied</h2>
+        <p class="text-muted">You don't have permission to view this page. If you think this is a mistake, please contact support.</p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            <a class="btn btn-primary" asp-controller="Home" asp-action="Index"><i class="bi bi-house me-1"></i>Back to home</a>
+            <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Contact"><i class="bi bi-headset me-1"></i>Contact support</a>
+        </div>
+    </div>
+</div>

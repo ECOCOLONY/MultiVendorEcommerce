@@ -1,0 +1,91 @@
+@model Application.AdminDashboard.Queries.AdminDashboardDto
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var labelsJson  = System.Text.Json.JsonSerializer.Serialize(Model.DailyRevenue.Select(p => p.Date));
+    var ordersJson  = System.Text.Json.JsonSerializer.Serialize(Model.DailyRevenue.Select(p => p.Orders));
+    var revenueJson = System.Text.Json.JsonSerializer.Serialize(Model.DailyRevenue.Select(p => p.Revenue));
+}
+
+<div class="row g-3">
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-1"><i class="bi bi-shop-window"></i></div>
+            <div class="mv-kpi-num">@Model.VendorCount</div>
+            <div class="mv-kpi-label">Vendors @(Model.PendingVendorCount > 0 ? $"· {Model.PendingVendorCount} pending" : "")</div>
+            <a asp-controller="Vendors" asp-action="Index" class="mv-kpi-link mt-2 d-inline-block">Manage <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-cool"><i class="bi bi-box-seam"></i></div>
+            <div class="mv-kpi-num">@Model.ProductCount</div>
+            <div class="mv-kpi-label">Products @(Model.PendingProductCount > 0 ? $"· {Model.PendingProductCount} pending" : "")</div>
+            <a asp-controller="Products" asp-action="Index" class="mv-kpi-link mt-2 d-inline-block">Review <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-warm"><i class="bi bi-bag-check"></i></div>
+            <div class="mv-kpi-num">@Model.OrderCount</div>
+            <div class="mv-kpi-label">Orders placed</div>
+            <a asp-controller="Refunds" asp-action="Index" class="mv-kpi-link mt-2 d-inline-block">Refunds <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="mv-kpi">
+            <div class="mv-kpi-icon bg-grad-2"><i class="bi bi-cash-stack"></i></div>
+            <div class="mv-kpi-num">@Model.TotalRevenue.ToString("0.00")</div>
+            <div class="mv-kpi-label">Total revenue</div>
+            <span class="mv-kpi-link mt-2 d-inline-block">@Model.CustomerCount distinct customers</span>
+        </div>
+    </div>
+</div>
+
+<div class="card mv-card mt-4">
+    <div class="card-header bg-white border-0 pt-3"><h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Last 14 days — orders &amp; revenue</h5></div>
+    <div class="card-body">
+        <canvas id="adminChart" height="80"></canvas>
+    </div>
+</div>
+
+<div class="card mv-card mt-4">
+    <div class="card-header bg-white border-0 pt-3"><h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick links</h5></div>
+    <div class="card-body d-flex flex-wrap gap-2">
+        <a asp-controller="Vendors"   asp-action="Index" asp-route-approved="false" class="btn btn-outline-primary"><i class="bi bi-shop-window me-1"></i>Pending vendors</a>
+        <a asp-controller="Products"  asp-action="Index" asp-route-status="Pending" class="btn btn-outline-success"><i class="bi bi-box-seam me-1"></i>Pending products</a>
+        <a asp-controller="Reviews"   asp-action="Index" asp-route-approved="false" class="btn btn-outline-warning"><i class="bi bi-chat-square-text me-1"></i>Pending reviews</a>
+        <a asp-controller="Refunds"   asp-action="Index" class="btn btn-outline-danger"><i class="bi bi-arrow-counterclockwise me-1"></i>Refund requests</a>
+        <a asp-controller="Coupons"   asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-ticket-perforated me-1"></i>Platform coupons</a>
+        <a asp-controller="AuditLogs" asp-action="Index" class="btn btn-outline-dark"><i class="bi bi-journals me-1"></i>Audit log</a>
+        <a asp-controller="WebsiteSettings" asp-action="Index" class="btn btn-outline-info"><i class="bi bi-globe2 me-1"></i>Website &amp; SEO</a>
+        <a asp-controller="StripeSettings" asp-action="Index" class="btn btn-outline-info"><i class="bi bi-credit-card me-1"></i>Stripe</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        (function() {
+            const ctx = document.getElementById('adminChart');
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(labelsJson),
+                    datasets: [
+                        { type: 'line', label: 'Revenue', data: @Html.Raw(revenueJson), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,.1)', tension: .3, yAxisID: 'y' },
+                        { type: 'bar',  label: 'Orders',  data: @Html.Raw(ordersJson),  backgroundColor: '#10b981', yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y:  { type: 'linear', position: 'left',  title: { display: true, text: 'Revenue' } },
+                        y1: { type: 'linear', position: 'right', title: { display: true, text: 'Orders' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        })();
+    </script>
+}

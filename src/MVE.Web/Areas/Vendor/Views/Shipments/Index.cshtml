@@ -1,0 +1,109 @@
+@using Domain.Enums
+@model Application.Common.Models.PaginatedList<Application.Shipments.Queries.GetMyShipments.VendorShipmentListItemDto>
+@{
+    ViewData["Title"] = "Shipments";
+    var status = ViewBag.Status as ShipmentStatus?;
+    var search = ViewBag.Search as string;
+
+    var route = new Dictionary<string, string?>();
+    if (status.HasValue)                    route["status"] = status.Value.ToString();
+    if (!string.IsNullOrWhiteSpace(search)) route["search"] = search;
+}
+
+<div class="mv-list">
+    <div class="card shadow-sm mb-3">
+        <form method="get">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Search</label>
+                        <input name="search" value="@search" class="form-control" placeholder="Order # or tracking number…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="" selected="@(status is null)">All statuses</option>
+                            <option value="Pending"   selected="@(status == ShipmentStatus.Pending)">Pending</option>
+                            <option value="InTransit" selected="@(status == ShipmentStatus.InTransit)">In transit</option>
+                            <option value="Delivered" selected="@(status == ShipmentStatus.Delivered)">Delivered</option>
+                            <option value="Failed"    selected="@(status == ShipmentStatus.Failed)">Failed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                @if (route.Any())
+                {
+                    <a asp-action="Index" class="btn btn-secondary me-1">Clear</a>
+                }
+                <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        @if (!Model.Items.Any())
+        {
+            <div class="card-body">
+                <div class="mv-empty">
+                    <div class="mv-empty-icon"><i class="bi bi-truck"></i></div>
+                    <h6>No shipments yet</h6>
+                    <p class="text-muted small mb-0">Ship items from the <a asp-controller="Orders" asp-action="Index">Orders</a> page to create a shipment.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="mv-list-table table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Carrier</th>
+                                <th>Tracking</th>
+                                <th class="text-center">Status</th>
+                                <th>Shipped</th>
+                                <th>Delivered</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var s in Model.Items)
+                        {
+                            <tr>
+                                <td><a asp-controller="Orders" asp-action="Details" asp-route-id="@s.OrderId"><code>@s.OrderNumber</code></a></td>
+                                <td>@s.Carrier</td>
+                                <td><code class="small">@s.TrackingNumber</code></td>
+                                <td class="text-center">
+                                    @switch (s.Status)
+                                    {
+                                        case ShipmentStatus.Pending:   <span class="mv-pill mv-pill-muted"><i class="bi bi-pause-circle"></i>Pending</span> break;
+                                        case ShipmentStatus.InTransit: <span class="mv-pill mv-pill-info"><i class="bi bi-truck"></i>In transit</span> break;
+                                        case ShipmentStatus.Delivered: <span class="mv-pill mv-pill-success"><i class="bi bi-check-circle"></i>Delivered</span> break;
+                                        case ShipmentStatus.Failed:    <span class="mv-pill mv-pill-danger"><i class="bi bi-x-circle"></i>Failed</span> break;
+                                    }
+                                </td>
+                                <td class="small text-muted">@(s.ShippedAtUtc?.ToString("MMM d") ?? "—")</td>
+                                <td class="small text-muted">@(s.DeliveredAtUtc?.ToString("MMM d") ?? "—")</td>
+                                <td class="text-end">
+                                    @if (s.Status == ShipmentStatus.InTransit)
+                                    {
+                                        <form asp-action="MarkDelivered" asp-route-id="@s.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg me-1"></i>Mark delivered</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                @await Html.PartialAsync("_Pagination", (Model.PageNumber, Model.TotalPages, Model.TotalCount, Model.HasPrevious, Model.HasNext, route))
+            </div>
+        }
+    </div>
+</div>

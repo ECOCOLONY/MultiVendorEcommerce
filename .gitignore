@@ -1,0 +1,19 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.pdb
+**/Properties/launchSettings.json.user
+
+## Secrets & local overrides
+.env
+appsettings.*.local.json
+
+## IDE
+.idea/
+.vs/
+*.swp
+*.swo

@@ -1,0 +1,128 @@
+@model PublicWebsiteSettingsDto
+@{
+    ViewData["Title"] = "Website & SEO";
+}
+
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success alert-dismissible fade show">@ok<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<form asp-action="Index" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><strong><i class="bi bi-building me-2"></i>Branding &amp; identity</strong></div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="SiteName" class="form-label"></label>
+                        <input asp-for="SiteName" class="form-control" />
+                        <span asp-validation-for="SiteName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="SiteTagline" class="form-label"></label>
+                        <input asp-for="SiteTagline" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="PublicBaseUrl" class="form-label">Public base URL</label>
+                        <input asp-for="PublicBaseUrl" class="form-control" placeholder="https://your-domain.com (Stripe return URLs &amp; canonical)" />
+                        <div class="form-text">Optional. Use when the site is behind a tunnel or reverse proxy so Stripe redirects and canonical links use the correct HTTPS origin.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Header logo</label>
+                        @if (!string.IsNullOrEmpty(Model.HeaderLogoUrl))
+                        { <div class="small mb-1"><img src="@Model.HeaderLogoUrl" alt="" style="max-height:40px" /></div> }
+                        <input type="file" name="headerLogoFile" class="form-control form-control-sm" accept="image/*" />
+                        <label asp-for="HeaderLogoUrl" class="form-label small text-muted mt-2">Or image URL</label>
+                        <input asp-for="HeaderLogoUrl" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Footer logo</label>
+                        @if (!string.IsNullOrEmpty(Model.FooterLogoUrl))
+                        { <div class="small mb-1"><img src="@Model.FooterLogoUrl" alt="" style="max-height:40px" /></div> }
+                        <input type="file" name="footerLogoFile" class="form-control form-control-sm" accept="image/*" />
+                        <label asp-for="FooterLogoUrl" class="form-label small text-muted mt-2">Or image URL</label>
+                        <input asp-for="FooterLogoUrl" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Favicon</label>
+                        @if (!string.IsNullOrEmpty(Model.FaviconUrl))
+                        { <div class="small mb-1"><img src="@Model.FaviconUrl" alt="" style="max-height:32px" /></div> }
+                        <input type="file" name="faviconFile" class="form-control form-control-sm" accept="image/x-icon,image/png,image/svg+xml,.ico" />
+                        <label asp-for="FaviconUrl" class="form-label small text-muted mt-2">Or URL</label>
+                        <input asp-for="FaviconUrl" class="form-control form-control-sm" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><strong><i class="bi bi-megaphone me-2"></i>Top bar promos</strong></div>
+                <div class="card-body row g-3">
+                    <div class="col-md-4"><label asp-for="TopBarPromo1" class="form-label"></label><input asp-for="TopBarPromo1" class="form-control" /></div>
+                    <div class="col-md-4"><label asp-for="TopBarPromo2" class="form-label"></label><input asp-for="TopBarPromo2" class="form-control" /></div>
+                    <div class="col-md-4"><label asp-for="TopBarPromo3" class="form-label"></label><input asp-for="TopBarPromo3" class="form-control" /></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><strong><i class="bi bi-envelope me-2"></i>Contact</strong></div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6"><label asp-for="ContactEmail" class="form-label"></label><input asp-for="ContactEmail" class="form-control" type="email" /><span asp-validation-for="ContactEmail" class="text-danger small"></span></div>
+                    <div class="col-md-6"><label asp-for="ContactFormRecipientEmail" class="form-label">Contact form goes to</label><input asp-for="ContactFormRecipientEmail" class="form-control" type="email" /><span asp-validation-for="ContactFormRecipientEmail" class="text-danger small"></span></div>
+                    <div class="col-md-6"><label asp-for="ContactPhone" class="form-label"></label><input asp-for="ContactPhone" class="form-control" /></div>
+                    <div class="col-12"><label asp-for="ContactAddress" class="form-label"></label><textarea asp-for="ContactAddress" class="form-control" rows="3"></textarea></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><strong><i class="bi bi-layout-text-window-reverse me-2"></i>Footer &amp; social</strong></div>
+                <div class="card-body row g-3">
+                    <div class="col-12"><label asp-for="FooterTagline" class="form-label"></label><textarea asp-for="FooterTagline" class="form-control" rows="3"></textarea></div>
+                    <div class="col-md-6"><label asp-for="FooterCopyrightSuffix" class="form-label">Copyright line suffix</label><input asp-for="FooterCopyrightSuffix" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="SocialFacebookUrl" class="form-label">Facebook URL</label><input asp-for="SocialFacebookUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="SocialTwitterUrl" class="form-label">X / Twitter URL</label><input asp-for="SocialTwitterUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="SocialInstagramUrl" class="form-label">Instagram URL</label><input asp-for="SocialInstagramUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="SocialYoutubeUrl" class="form-label">YouTube URL</label><input asp-for="SocialYoutubeUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="SocialLinkedInUrl" class="form-label">LinkedIn URL</label><input asp-for="SocialLinkedInUrl" class="form-control" /></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><strong><i class="bi bi-search me-2"></i>SEO &amp; meta</strong></div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6"><label asp-for="DefaultMetaTitle" class="form-label">Default title (home / fallback)</label><input asp-for="DefaultMetaTitle" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="DefaultOgTitle" class="form-label">Default Open Graph title</label><input asp-for="DefaultOgTitle" class="form-control" /></div>
+                    <div class="col-12"><label asp-for="DefaultMetaDescription" class="form-label"></label><textarea asp-for="DefaultMetaDescription" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12"><label asp-for="DefaultMetaKeywords" class="form-label"></label><input asp-for="DefaultMetaKeywords" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="OgDefaultImageUrl" class="form-label">Default OG / social image URL</label><input asp-for="OgDefaultImageUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="OgSiteName" class="form-label">og:site_name</label><input asp-for="OgSiteName" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="RobotsMeta" class="form-label">Robots (e.g. index, follow)</label><input asp-for="RobotsMeta" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="ThemeColor" class="form-label">Theme color (#hex)</label><input asp-for="ThemeColor" class="form-control" placeholder="#6366f1" /></div>
+                    <div class="col-md-6"><label asp-for="TwitterSite" class="form-label">Twitter @@site</label><input asp-for="TwitterSite" class="form-control" placeholder="@@yoursite" /></div>
+                    <div class="col-md-6"><label asp-for="GoogleSiteVerification" class="form-label">Google site verification</label><input asp-for="GoogleSiteVerification" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="BingSiteVerification" class="form-label">Bing verification</label><input asp-for="BingSiteVerification" class="form-control" /></div>
+                    <div class="col-12"><label asp-for="StructuredDataJsonLd" class="form-label">JSON-LD (optional, validated JSON)</label><textarea asp-for="StructuredDataJsonLd" class="form-control font-monospace small" rows="6" placeholder='{ "@@context": "https://schema.org", ... }'></textarea></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Save settings</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

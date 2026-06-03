@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+    <title>@ViewData["Title"] - Ramadan Abdullah</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/adminlte/css/adminlte.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="mv-auth-body">
+    <div class="mv-auth-shell">
+        <!-- Left: form -->
+        <div class="mv-auth-form">
+            <div class="mv-auth-form-inner">
+                <a class="mv-auth-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-shop me-1"></i>MVE
+                </a>
+                @RenderBody()
+                <p class="mv-auth-foot small text-muted">
+                    <a class="text-muted text-decoration-none" asp-controller="Home" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back to home</a>
+                    <span class="ms-3"><a class="text-muted text-decoration-none" asp-controller="Home" asp-action="Privacy">Privacy</a> Â· <a class="text-muted text-decoration-none" asp-controller="Home" asp-action="Terms">Terms</a></span>
+                </p>
+            </div>
+        </div>
+        <!-- Right: gradient panel -->
+        <div class="mv-auth-side">
+            <div class="mv-auth-side-inner">
+                <i class="bi bi-bag-heart-fill mv-auth-illustration"></i>
+                <h2>Welcome to MVE</h2>
+                <p class="lead">Shop from many vendors. One cart. One checkout.</p>
+                <ul class="mv-auth-points">
+                    <li><i class="bi bi-check2-circle me-2"></i>Independent stores in one trusted place</li>
+                    <li><i class="bi bi-check2-circle me-2"></i>One cart, one checkout, secure payment</li>
+                    <li><i class="bi bi-check2-circle me-2"></i>Track every shipment per vendor</li>
+                    <li><i class="bi bi-check2-circle me-2"></i>Easy refunds within the platform</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

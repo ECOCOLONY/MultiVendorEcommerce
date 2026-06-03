@@ -1,0 +1,85 @@
+@model Application.Products.Queries.GetMyProductById.MyProductDetailDto
+@{
+    ViewData["Title"] = $"Product — {Model.Name}";
+}
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">@Model.Name</h5></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Store</dt>      <dd class="col-sm-9">@Model.StoreName</dd>
+                    <dt class="col-sm-3">Category</dt>   <dd class="col-sm-9">@Model.CategoryName</dd>
+                    <dt class="col-sm-3">Slug</dt>       <dd class="col-sm-9"><code>@Model.Slug</code></dd>
+                    <dt class="col-sm-3">Base price</dt> <dd class="col-sm-9">@Model.BasePrice.ToString("0.00")</dd>
+                    <dt class="col-sm-3">Status</dt>
+                    <dd class="col-sm-9">
+                        @switch (Model.ApprovalStatus)
+                        {
+                            case Domain.Enums.ProductApprovalStatus.Approved:
+                                <span class="badge bg-success">Approved</span>; break;
+                            case Domain.Enums.ProductApprovalStatus.Pending:
+                                <span class="badge bg-warning text-dark">Pending</span>; break;
+                            case Domain.Enums.ProductApprovalStatus.Rejected:
+                                <span class="badge bg-danger">Rejected</span>; break;
+                        }
+                        @if (Model.IsPublished) { <span class="badge bg-info ms-1">Published</span> }
+                    </dd>
+                    <dt class="col-sm-3">Description</dt><dd class="col-sm-9">@(Model.Description ?? "—")</dd>
+                    <dt class="col-sm-3">Created</dt>    <dd class="col-sm-9">@Model.CreatedAtUtc.ToString("u")</dd>
+                </dl>
+            </div>
+            <div class="card-footer text-end">
+                <a asp-action="Index" class="btn btn-secondary">Back</a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Edit</a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-3">
+            <div class="card-header"><h5 class="mb-0">Variants</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light"><tr><th>SKU</th><th>Color</th><th>Size</th><th class="text-end">Price</th><th class="text-end">Stock</th><th>Active</th></tr></thead>
+                    <tbody>
+                    @foreach (var v in Model.Variants)
+                    {
+                        <tr>
+                            <td><code>@v.Sku</code></td>
+                            <td>@(v.Color ?? "—")</td>
+                            <td>@(v.Size ?? "—")</td>
+                            <td class="text-end">@v.Price.ToString("0.00")</td>
+                            <td class="text-end">@v.StockQuantity</td>
+                            <td>@(v.IsActive ? "Yes" : "No")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Images</h5></div>
+            <div class="card-body">
+                @if (Model.Images.Any())
+                {
+                    <div class="row g-2">
+                        @foreach (var img in Model.Images)
+                        {
+                            <div class="col-6">
+                                <img src="@img.Url" class="img-thumbnail w-100" style="height:140px;object-fit:cover" />
+                                @if (img.IsMain) { <span class="badge bg-primary mt-1">Main</span> }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">No images uploaded.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

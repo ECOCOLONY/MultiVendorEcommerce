@@ -1,0 +1,84 @@
+@model Web.Models.ViewModels.Profile.ProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="mv-page-header">
+    <h1 class="mv-page-header__title"><i class="bi bi-person-circle"></i>My Profile</h1>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div style="background:#fff;border-radius:1.15rem;border:1px solid rgba(99,102,241,.12);box-shadow:0 4px 24px rgba(0,0,0,.07);overflow:hidden;">
+            <div style="height:90px;background:var(--mv-grad-1);position:relative;">
+                <div style="position:absolute;bottom:0;right:0;left:0;height:50px;background:linear-gradient(transparent,rgba(99,102,241,.15));"></div>
+            </div>
+            <div class="text-center" style="margin-top:-48px;padding-bottom:1.5rem;padding-left:1.5rem;padding-right:1.5rem;">
+                @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                {
+                    <img src="@Model.ProfileImageUrl" class="rounded-circle d-block mx-auto mb-3"
+                         style="width:96px;height:96px;object-fit:cover;border:4px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.12);" />
+                }
+                else
+                {
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width:96px;height:96px;background:var(--mv-grad-soft);border:4px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.12);">
+                        <i class="bi bi-person" style="font-size:2rem;color:#6366f1;"></i>
+                    </div>
+                }
+                <h5 class="fw-bold mb-1" style="color:#0f172a;">@Model.FullName</h5>
+                <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>@Model.Email</p>
+                <div class="d-flex justify-content-center gap-1 flex-wrap mb-3">
+                    @foreach (var r in Model.Roles)
+                    { <span style="background:var(--mv-grad-1);color:#fff;padding:.25rem .7rem;border-radius:2rem;font-size:.72rem;font-weight:600;">@r</span> }
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    <a asp-action="ChangePassword" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-key me-1"></i>Change password
+                    </a>
+                    <a asp-controller="Addresses" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-geo-alt me-1"></i>Manage addresses
+                    </a>
+                    <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-bag me-1"></i>My orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div style="background:#fff;border-radius:1.15rem;border:1px solid rgba(99,102,241,.12);box-shadow:0 4px 24px rgba(0,0,0,.07);overflow:hidden;">
+            <div style="height:3px;background:var(--mv-grad-1);"></div>
+            <div class="p-4">
+                <h5 class="fw-bold mb-4" style="color:#0f172a;letter-spacing:-.01em;">
+                    <i class="bi bi-pencil-square me-2" style="color:#6366f1;"></i>Edit profile
+                </h5>
+                <form asp-action="Index" method="post" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="ProfileImageUrl" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label">Full name</label>
+                        <input asp-for="FullName" class="form-control" placeholder="Your full name" />
+                        <span asp-validation-for="FullName" class="text-danger" style="font-size:.8rem;"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="ProfileImageFile" class="form-label">Profile photo</label>
+                        <input asp-for="ProfileImageFile" type="file" accept="image/*" class="form-control" />
+                        <small class="text-muted">PNG or JPG, square recommended.</small>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i>Save changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

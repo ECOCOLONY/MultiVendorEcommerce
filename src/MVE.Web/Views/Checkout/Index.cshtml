@@ -1,0 +1,187 @@
+@using Domain.Enums
+@model Web.Models.ViewModels.Checkout.CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout";
+    var vendorGroups = Model.Cart!.Items.GroupBy(i => i.StoreName).ToList();
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index">Shop</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Cart" asp-action="Index">Cart</a></li>
+        <li class="breadcrumb-item active">Checkout</li>
+    </ol>
+</nav>
+
+<div class="mv-page-header">
+    <h1 class="mv-page-header__title"><i class="bi bi-shield-check"></i>Secure Checkout</h1>
+</div>
+
+<form asp-action="Place" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="row g-4">
+        <!-- Left column: steps -->
+        <div class="col-lg-7 d-flex flex-column gap-3">
+
+            <!-- Step 1: Shipping address -->
+            <div class="mv-checkout-card">
+                <div class="mv-checkout-card__header">
+                    <span class="mv-checkout-card__step">1</span>
+                    <div>
+                        <h5 class="mb-0 fw-bold" style="color:#0f172a;">Shipping address</h5>
+                        <small class="text-muted">Where should we send your order?</small>
+                    </div>
+                </div>
+                <div class="mv-checkout-card__body">
+                    @if (Model.Addresses.Any())
+                    {
+                        @foreach (var a in Model.Addresses)
+                        {
+                            <label class="mv-address-option d-flex gap-3 align-items-start">
+                                <input class="form-check-input mt-1" type="radio" name="ShippingAddressId"
+                                       value="@a.Id" @(a.Id == Model.ShippingAddressId ? "checked" : "") />
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <strong class="small">@(a.Label ?? "Address")</strong>
+                                        @if (a.IsDefault)
+                                        { <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.68rem;">Default</span> }
+                                    </div>
+                                    <p class="mb-0 small text-muted">
+                                        @a.Line1@(string.IsNullOrEmpty(a.Line2) ? "" : ", " + a.Line2),
+                                        @a.City @a.PostalCode, @a.Country
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(a.Phone))
+                                    { <p class="mb-0 small text-muted mt-1"><i class="bi bi-telephone me-1"></i>@a.Phone</p> }
+                                </div>
+                            </label>
+                        }
+                        <a asp-controller="Addresses" asp-action="Create" class="btn btn-sm btn-outline-primary mt-1">
+                            <i class="bi bi-plus-lg me-1"></i>Add new address
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <i class="bi bi-geo-alt-fill text-muted fs-2 d-block mb-2"></i>
+                            <p class="text-muted small mb-2">No saved addresses. Add one to continue.</p>
+                            <a asp-controller="Addresses" asp-action="Create" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i>Add address
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Step 2: Payment -->
+            <div class="mv-checkout-card">
+                <div class="mv-checkout-card__header">
+                    <span class="mv-checkout-card__step">2</span>
+                    <div>
+                        <h5 class="mb-0 fw-bold" style="color:#0f172a;">Payment method</h5>
+                        <small class="text-muted">All transactions are secure and encrypted.</small>
+                    </div>
+                </div>
+                <div class="mv-checkout-card__body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="mv-payment-option h-100 d-flex flex-column align-items-center justify-content-center gap-2">
+                                <input type="radio" name="PaymentMethod" value="@PaymentMethod.Stripe" checked />
+                                <i class="bi bi-credit-card-2-front"></i>
+                                <span class="small fw-semibold" style="color:#0f172a;">Card (Stripe)</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="mv-payment-option h-100 d-flex flex-column align-items-center justify-content-center gap-2">
+                                <input type="radio" name="PaymentMethod" value="@PaymentMethod.CreditCard" />
+                                <i class="bi bi-lightning-charge"></i>
+                                <span class="small fw-semibold" style="color:#0f172a;">Simulated pay</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="mv-payment-option h-100 d-flex flex-column align-items-center justify-content-center gap-2">
+                                <input type="radio" name="PaymentMethod" value="@PaymentMethod.CashOnDelivery" />
+                                <i class="bi bi-cash-coin"></i>
+                                <span class="small fw-semibold" style="color:#0f172a;">Cash on Delivery</span>
+                            </label>
+                        </div>
+                    </div>
+                    @if (ViewBag.StripeConfigured as bool? == true)
+                    {
+                        <div class="d-flex align-items-center gap-2 small text-muted p-3 rounded mb-0" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                            <i class="bi bi-shield-lock text-success"></i>
+                            Card payments use <strong>Stripe Checkout</strong> — you’ll be redirected to a secure Stripe page.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning border-0 small mb-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Stripe is not configured — add <code>Stripe:SecretKey</code> in appsettings, or use <strong>Simulated pay</strong> / COD only.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column: order summary -->
+        <div class="col-lg-5">
+            <div class="mv-cart-summary">
+                <div class="p-4 pb-2">
+                    <h5 class="fw-bold mb-3" style="color:#0f172a;letter-spacing:-0.01em;">Order summary</h5>
+                    @foreach (var g in vendorGroups)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-1 small fw-semibold text-uppercase text-muted mb-2">
+                                <i class="bi bi-shop"></i>@g.Key
+                            </div>
+                            @foreach (var i in g)
+                            {
+                                <div class="d-flex justify-content-between align-items-start small mb-1 gap-2">
+                                    <span class="text-truncate flex-grow-1">@i.ProductName <span class="text-muted">×@i.Quantity</span></span>
+                                    <span class="fw-semibold flex-shrink-0">$@i.LineTotal.ToString("0.00")</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    <hr style="border-color:#f1f5f9;margin:0.75rem 0;" />
+                    <div class="mv-cart-summary__row">
+                        <span class="text-muted">Items</span>
+                        <strong>@Model.Cart.ItemCount</strong>
+                    </div>
+                    <div class="mv-cart-summary__row">
+                        <span class="text-muted">Subtotal</span>
+                        <strong>$@Model.Cart.Subtotal.ToString("0.00")</strong>
+                    </div>
+                    <div class="mv-cart-summary__row">
+                        <span class="text-muted">Shipping</span>
+                        <span class="text-success fw-semibold small"><i class="bi bi-gift me-1"></i>Free</span>
+                    </div>
+                    <hr style="border-color:#f1f5f9;margin:0.75rem 0;" />
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <span class="fw-bold">Total</span>
+                        <span class="mv-cart-summary__total">$@Model.Cart.Subtotal.ToString("0.00")</span>
+                    </div>
+                </div>
+
+                <div class="p-4 pt-2 d-flex flex-column gap-2">
+                    <div>
+                        <label class="form-label"><i class="bi bi-ticket-perforated me-1"></i>Coupon code</label>
+                        <input name="CouponCode" class="form-control text-uppercase" placeholder="e.g. WELCOME10" />
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg w-100 mt-1">
+                        <i class="bi bi-bag-check me-2"></i>Place order
+                    </button>
+                    <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary w-100 btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i>Back to cart
+                    </a>
+                </div>
+                <div class="px-4 pb-4 d-flex justify-content-center gap-3 text-muted" style="font-size:.72rem;">
+                    <span><i class="bi bi-lock me-1"></i>SSL Encrypted</span>
+                    <span><i class="bi bi-shield-check me-1"></i>Secure</span>
+                    <span><i class="bi bi-arrow-counterclockwise me-1"></i>Easy returns</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

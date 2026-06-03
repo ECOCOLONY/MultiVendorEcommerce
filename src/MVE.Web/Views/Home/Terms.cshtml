@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Terms of Service";
+}
+
+<h1 class="mb-3"><i class="bi bi-file-earmark-text me-2"></i>@ViewData["Title"]</h1>
+<p class="text-muted small">Last updated: @DateTime.UtcNow.ToString("MMMM yyyy")</p>
+
+<div class="card mv-card">
+    <div class="card-body p-4 p-md-5">
+        <p>This is an academic demonstration marketplace. Use of this site implies acceptance of the terms below.</p>
+
+        <h5 class="mt-4">1. Use of the service</h5>
+        <p class="text-muted">You may browse and purchase products. You agree not to attempt to disrupt the service, scrape data at scale, or impersonate other users.</p>
+
+        <h5 class="mt-4">2. Vendor accounts</h5>
+        <p class="text-muted">Vendors must complete the sign-up flow and pass admin approval before listing products. Vendors are responsible for accurate listings, fulfillment, and customer communication for their own items. The platform retains the right to suspend accounts that violate marketplace policy.</p>
+
+        <h5 class="mt-4">3. Payments</h5>
+        <p class="text-muted">Payments in this demo are mocked. In a production deployment, the platform would integrate with a payment provider. Refunds are processed via the in-app refund flow described in our <a asp-action="Faq">FAQ</a>.</p>
+
+        <h5 class="mt-4">4. Returns &amp; refunds</h5>
+        <p class="text-muted">Customers can cancel an order as long as no vendor has prepared the items. After delivery, refund requests can be submitted with a reason and are reviewed by an admin.</p>
+
+        <h5 class="mt-4">5. Intellectual property</h5>
+        <p class="text-muted">Product names, images, and store branding belong to their respective vendors. The platform's source code and design are an academic project provided as-is.</p>
+
+        <h5 class="mt-4">6. Privacy</h5>
+        <p class="text-muted">See our <a asp-action="Privacy">Privacy Policy</a> for details on what we store and who can see what.</p>
+
+        <h5 class="mt-4">7. Liability</h5>
+        <p class="text-muted">This is an academic project. The platform is provided without warranty for production use.</p>
+    </div>
+</div>
